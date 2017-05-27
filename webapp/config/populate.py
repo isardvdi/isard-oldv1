@@ -733,6 +733,23 @@ class Populate(object):
                                             'viewer':{'defaultMode':'Insecure',
                                                      'certificate':'',
                                                      'domain':''},
+                                            'weights':[{'avg_cpu_idle':{'parameter':'cpu_idle',
+                                                                      'weight':100,
+                                                                      'type':'avg'}
+                                                      },
+                                                     {'free_memory':{'parameter':'mem_free',
+                                                                      'weight':20,
+                                                                      'type':'last'}
+                                                      },
+                                                     {'cpu_freq':   {'parameter':'cpu_freq',
+                                                                      'weight':10,
+                                                                      'type':'constant'}
+                                                      },
+                                                     {'io_wait_peaks':   {'parameter':'io_wait',
+                                                                      'weight':-50,
+                                                                      'type':'max'}
+                                                      }
+                                                    ],
                                             'interfaces': [],
                                             'allowed': {
                                                           'roles': [],
