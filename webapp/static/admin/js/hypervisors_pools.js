@@ -14,6 +14,38 @@ $(document).ready(function() {
 				backdrop: 'static',
 				keyboard: false
 			}).modal('show');
+				$("#weights-avg_cpu_idle-weight").ionRangeSlider({
+						  type: "single",
+						  min: 0,
+						  max: 100,
+                          step:5,
+						  grid: true,
+						  disable: false
+						  }).data("ionRangeSlider").update();
+				$("#weights-cpu_freq-weight").ionRangeSlider({
+						  type: "single",
+						  min: 0,
+						  max: 100,
+                          step:5,
+						  grid: true,
+						  disable: false
+						  }).data("ionRangeSlider").update();
+				$("#weights-free_memory-weight").ionRangeSlider({
+						  type: "single",
+						  min: 0,
+						  max: 100,
+                          step:5,
+						  grid: true,
+						  disable: false
+						  }).data("ionRangeSlider").update();
+				$("#weights-io_wait_peaks-weight").ionRangeSlider({
+						  type: "single",
+						  min: 0,
+						  max: 100,
+                          step:5,
+						  grid: true,
+						  disable: false
+						  }).data("ionRangeSlider").update();						  						  
 	});
 
     var tablepools = $('#hypervisors_pools').DataTable( {
@@ -50,7 +82,8 @@ $(document).ready(function() {
             data = row.data();
 			$.each( data['paths'], function( k, v) {
 				$.each( data['paths'][k], function( key, val ) {
-					$('#hyper-pools-paths-'+data.id+' tbody').append('<tr><td>'+k+'</td><td>'+key+'</td><td>'+val['disk_operations']+'</td><td>'+val['weight']+'</td></tr>');
+					console.log(data['paths'][k])
+					$('#hyper-pools-paths-'+data.id+' tbody').append('<tr><td>'+k+'</td><td>'+val['path']+'</td><td>'+val['disk_operations']+'</td><td>'+val['weight']+'</td></tr>');
 				});
 			});
 			if(data['interfaces'].length==0){
