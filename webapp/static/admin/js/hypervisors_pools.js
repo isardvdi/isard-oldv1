@@ -6,9 +6,26 @@
 */
 
 $hypervisor_pool_template = $(".hyper-pool-detail");
-
 $(document).ready(function() {
-	
+	$('#modalAddPool').on('hidden.bs.modal', function(){
+        $(this).find('form')[0].reset();
+        console.log('reset')
+        slider_avgcpu.reset()
+        slider_freqcpu.reset()
+        slider_freemem.reset()
+        slider_iowait.reset()
+    });
+    //~ $('[data-dismiss=modal]').on('click', function (e) {
+        //~ var $t = $(this),
+            //~ target = $t[0].href || $t.data("target") || $t.parents('.modal') || [];
+
+      //~ $(target).find('form')[0].reset();
+        //~ console.log('reset-close')
+        //~ slider_avgcpu.reset()
+        //~ slider_freqcpu.reset()
+        //~ slider_freemem.reset()
+        //~ slider_iowait.reset()
+    //~ })
 	$('.btn-new-pool').on('click', function () {
 			$('#modalAddPool').modal({
 				backdrop: 'static',
@@ -18,10 +35,12 @@ $(document).ready(function() {
 						  type: "single",
 						  min: 0,
 						  max: 100,
+                          from: 20,
                           step:5,
 						  grid: true,
 						  disable: false
 						  }).data("ionRangeSlider").update();
+                slider_avgcpu = $("#weights-avg_cpu_idle-weight").data("ionRangeSlider");
 				$("#weights-cpu_freq-weight").ionRangeSlider({
 						  type: "single",
 						  min: 0,
@@ -30,6 +49,7 @@ $(document).ready(function() {
 						  grid: true,
 						  disable: false
 						  }).data("ionRangeSlider").update();
+                slider_freqcpu = $("#weights-cpu_freq-weight").data("ionRangeSlider");
 				$("#weights-free_memory-weight").ionRangeSlider({
 						  type: "single",
 						  min: 0,
@@ -38,6 +58,7 @@ $(document).ready(function() {
 						  grid: true,
 						  disable: false
 						  }).data("ionRangeSlider").update();
+                slider_freemem = $("#weights-free_memory-weight").data("ionRangeSlider");
 				$("#weights-io_wait_peaks-weight").ionRangeSlider({
 						  type: "single",
 						  min: 0,
@@ -45,7 +66,8 @@ $(document).ready(function() {
                           step:5,
 						  grid: true,
 						  disable: false
-						  }).data("ionRangeSlider").update();						  						  
+						  }).data("ionRangeSlider").update();	
+                slider_iowait = $("#weights-io_wait_peaks-weight").data("ionRangeSlider");
 	});
 
     var tablepools = $('#hypervisors_pools').DataTable( {
