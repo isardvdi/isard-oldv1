@@ -193,175 +193,97 @@
                             <div class="x_content">
                                 <div class="col-md-6 col-sm-6 col-xs-12">
                                     <div class="row">
-                                        <button id="test" type="button" class="btn btn-success">Create pool</button>
-                                           <input id="table_paths" placeholder="Absolute path (/isard/bases)" type="text">
-                                            <input id="table_diskop" placeholder="" type="text">
-                                            <input id="table-weights" class="form-control col-md-7 col-xs-12 weight-slider" type="text">
-                                    <table id="table_paths" class="display">
-                                      <thead>
-                                        <tr>
-                                          <th>path</th>
-                                          <th>disk_operations</th>
-                                          <th>weight</th>
-                                          <th>action</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
+										<div class="x_panel" style="background-color:#f7f7f7">
+											<div class="col-md-2 col-sm-2 col-xs-12">
+												<label class="control-label">Bases
+												</label>
+											</div>										
+											<button id="table_bases_add" type="button" class="btn btn-success">Add base</button>
+											<table id="table_bases" class="display">
+											  <thead>
+												<tr>
+												  <th>path</th>
+												  <th>disk_operations</th>
+												  <th>weight</th>
+												</tr>
+											  </thead>
+											  <tbody>
 
-                                      </tbody>
-                                    </table>
+											  </tbody>
+											</table>
+										</div>
                                     
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-2 col-sm-2 col-xs-12">
-                                            <label class="control-label">Bases
-                                            </label>
-                                        </div>
-                                        <div class="col-md-10 col-sm-10 col-xs-12">
-                                            <div class="row"></div>
-                                            
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases">Paths <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <select id="paths-bases" name="paths-bases" class="paths-tags" style="width:100%"  multiple="multiple"></select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-disk_operations">Disk operations <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                        <select id="paths-bases-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-weight">Weight <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-bases-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-bases-weight" placeholder="Absolute path (/isard/bases)" required="required" type="text">
-                                                    </div>
-                                                </div>
-                                                
-                                           </div> 
-                                    </div> 
-                                    <hr>
 
                                     <div class="row">
-                                        <div class="col-md-2 col-sm-2 col-xs-12">
-                                            <label class="control-label">Templates
-                                            </label>
-                                        </div>
-                                        <div class="col-md-10 col-sm-10 col-xs-12">
-                                            <div class="row"></div>
-                                            
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates">Path <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                        <select id="paths-templates" name="paths-templates" class="paths-tags" style="width:100%"  multiple="multiple"></select>
-            <!--
-                                                       <input id="paths-templates" class="form-control col-md-7 col-xs-12" name="paths-templates" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-            -->
-                                                    </div>
-                                                </div>
+										<div class="x_panel" style="background-color:#f7f7f7">
+											<div class="col-md-2 col-sm-2 col-xs-12">
+												<label class="control-label">Templates
+												</label>
+											</div>										
+											<button id="table_templates_add" type="button" class="btn btn-success">Add template</button>
+											<table id="table_templates" class="display">
+											  <thead>
+												<tr>
+												  <th>path</th>
+												  <th>disk_operations</th>
+												  <th>weight</th>
+												</tr>
+											  </thead>
+											  <tbody>
 
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-disk_operations">Disk operations <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                        <select id="paths-templates-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-weight">Weight <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-templates-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-templates-weight" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-                                                    </div>
-                                                </div>
-                                                
-                                           </div> 
-                                    </div> 
-                                    <hr>
+											  </tbody>
+											</table>
+										</div>
+                                    </div>
+                                
                                 </div>
                                 <div class="col-md-6 col-sm-6 col-xs-12">
                                     <div class="row">
-                                        <div class="col-md-2 col-sm-2 col-xs-12">
-                                            <label class="control-label">groups
-                                            </label>
-                                        </div>
-                                        <div class="col-md-10 col-sm-10 col-xs-12">
-                                            <div class="row"></div>
-                                            
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups">Path <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-groups" class="form-control col-md-7 col-xs-12" name="paths-groups" placeholder="Absolute path (/isard/groups)" required="required" type="text">
-                                                    </div>
-                                                </div>
+										<div class="x_panel" style="background-color:#f7f7f7">
+											<div class="col-md-2 col-sm-2 col-xs-12">
+												<label class="control-label">Group
+												</label>
+											</div>										
+											<button id="table_groups_add" type="button" class="btn btn-success">Add group</button>
+											<table id="table_groups" class="display">
+											  <thead>
+												<tr>
+												  <th>path</th>
+												  <th>disk_operations</th>
+												  <th>weight</th>
+												</tr>
+											  </thead>
+											  <tbody>
 
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-disk_operations">Disk operations <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                        <select id="paths-groups-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
-                                                        </select>                                            
-                                                    </div>
-                                                </div>
-
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-weight">Weight <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-groups-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-groups-weight" placeholder="Absolute path (/isard/groups)" required="required" type="text">
-                                                    </div>
-                                                </div>
-                                                
-                                           </div> 
-                                    </div> 
-                                    <hr>
+											  </tbody>
+											</table>
+										</div>
                                     
+                                    </div>
+
                                     <div class="row">
-                                        <div class="col-md-2 col-sm-2 col-xs-12">
-                                            <label class="control-label">isos
-                                            </label>
-                                        </div>
-                                        <div class="col-md-10 col-sm-10 col-xs-12">
-                                            <div class="row"></div>
-                                            
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos">Path <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-isos" class="form-control col-md-7 col-xs-12" name="paths-isos" placeholder="Absolute path (/isard/isos)" required="required" type="text">
-                                                    </div>
-                                                </div>
+										<div class="x_panel" style="background-color:#f7f7f7">
+											<div class="col-md-2 col-sm-2 col-xs-12">
+												<label class="control-label">Isos
+												</label>
+											</div>										
+											<button id="table_isos_add" type="button" class="btn btn-success">Add iso</button>
+											<table id="table_isos" class="display">
+											  <thead>
+												<tr>
+												  <th>path</th>
+												  <th>disk_operations</th>
+												  <th>weight</th>
+												</tr>
+											  </thead>
+											  <tbody>
 
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-disk_operations">Disk operations <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                        <select id="paths-isos-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="item form-group">
-                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-weight">Weight <span class="required">*</span>
-                                                    </label>
-                                                    <div class="col-md-9 col-sm-9 col-xs-12">
-                                                       <input id="paths-isos-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-isos-weight" placeholder="Absolute path (/isard/isos)" required="required" type="text">
-                                                    </div>
-                                                </div>
-                                                
-                                           </div> 
-                                    </div>                                                             
-                                </div>
+											  </tbody>
+											</table>
+										</div>
+                                    </div> 
+                                 </div>
                                 </div>
                             </div>
                         </div>

@@ -32,48 +32,62 @@ $(document).ready(function() {
 				keyboard: false
 			}).modal('show');
 
-                $('.paths-tags').select2({
-                    tags: true,
-                    tokenSeparators: [",", " "]
-                }).on("change", function(e) {
-                    var isNew = $(this).find('[data-select2-tag="true"]');
-                    if(isNew.length){
-                        isNew.replaceWith('<option selected value="'+isNew.val()+'">'+isNew.val()+'</option>');
-                        $.ajax({
-                            // ... store tag ...
-                        });
-                    }
-                });
+                //~ $('.paths-tags').select2({
+                    //~ tags: true,
+                    //~ tokenSeparators: [",", " "]
+                //~ }).on("change", function(e) {
+                    //~ var isNew = $(this).find('[data-select2-tag="true"]');
+                    //~ if(isNew.length){
+                        //~ isNew.replaceWith('<option selected value="'+isNew.val()+'">'+isNew.val()+'</option>');
+                        //~ $.ajax({
+                            //~ // ... store tag ...
+                        //~ });
+                    //~ }
+                //~ });
+
+
                 
-                
-                                            //~ <input id="table_diskop" placeholder="" type="text">
-                                            //~ <input id="table-weights" class="form-control col-md-7 col-xs-12 weight-slider" type="text">
             
-                table_paths = $('#table_paths').DataTable();
-                $('#test').on('click', function () {
-                    console.log('in')
-                    //~ $('#table_paths tbody').append('<tr><th><input id="table_paths" name="table_paths" placeholder="Absolute path (/isard/bases)" type="text" value="/isard/bases"> \
-                                            //~ </th><th>2</th><th>3</th><th>4</th></tr>');
-                        console.log('add or update')
-                        var data = JSON.parse({'path':'/isard','disk_operations':'localhost','weight':100});
-                        table_paths.row.add(data).draw();
-                        //~ if($("#" + data.id).length == 0) {
-                          //~ //it doesn't exist
-                          //~ table.row.add(data).draw();
-                        //~ }else{
-                          //~ //if already exists do an update (ie. connection lost and reconnect)
-                          //~ var row = table.row('#'+data.id); 
-                          //~ table.row(row).data(data).invalidate();			
-                        //~ }
-                        //~ table.draw(false);
-                    //~ });
-                    //~ var text = JSON.stringify($('#hypervisors').data().toArray(), null, '\t');
-                    //~ $.each(table.rows({filter: 'applied'}).data(),function(key, value){
-                        //~ console.log(value['name']+value['id'])
-                    //~ });
-                    console.log(JSON.stringify(table_paths.rows({filter: 'applied'}).data().toArray()))
+                $('#table_bases_add').on('click', function () {
+                    $('#table_bases tbody').append('<tr>\
+								<th><input name="path" placeholder="Absolute path (/isard/bases)" type="text"></th>\
+								<th><input name="disk_operations" placeholder="" type="text"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								</tr>');
+
+					slider_weight();
                 });
-            
+
+                $('#table_templates_add').on('click', function () {
+                    $('#table_templates tbody').append('<tr>\
+								<th><input name="path" placeholder="Absolute path (/isard/templates)" type="text"></th>\
+								<th><input name="disk_operations" placeholder="" type="text"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								</tr>');
+
+					slider_weight();
+                });
+
+                $('#table_groups_add').on('click', function () {
+                    $('#table_groups tbody').append('<tr>\
+								<th><input name="path" placeholder="Absolute path (/isard/groups)" type="text"></th>\
+								<th><input name="disk_operations" placeholder="" type="text"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								</tr>');
+
+					slider_weight();
+                });
+
+                $('#table_isos_add').on('click', function () {
+                    $('#table_isos tbody').append('<tr>\
+								<th><input name="path" placeholder="Absolute path (/isard/isos)" type="text"></th>\
+								<th><input name="disk_operations" placeholder="" type="text"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								</tr>');
+
+					slider_weight();
+                });
+                                                            
 				$("#weights-avg_cpu_idle-weight").ionRangeSlider({
 						  type: "single",
 						  min: 0,
@@ -218,196 +232,31 @@ function formatHypervisorPool ( d ) {
 }  
 
 
+function table2json(){
+							var newFormData = [];
+							  $('#datatable_paths tr:not(:first)').each(function(i) {
+								var tb = jQuery(this);
+								var obj = {};
+								tb.find('input').each(function() {
+								  obj[this.name] = this.value;
+								});
+								//~ obj['row'] = i;
+								newFormData.push(obj);
+							  });
+							  console.log(newFormData);
+	
+	
+}
 
-
-//// Parse table
-/**
- * table-to-json
- * jQuery plugin that reads an HTML table and returns a javascript object representing the values and columns of the table
- *
- * @author Daniel White
- * @copyright Daniel White 2017
- * @license MIT <https://github.com/lightswitch05/table-to-json/blob/master/MIT-LICENSE>
- * @link https://github.com/lightswitch05/table-to-json
- * @module table-to-json
- * @version 0.11.1
- */
-(function( $ ) {
-  'use strict';
-
-  $.fn.tableToJSON = function(opts) {
-
-    // Set options
-    var defaults = {
-      ignoreColumns: [],
-      onlyColumns: null,
-      ignoreHiddenRows: true,
-      ignoreEmptyRows: false,
-      headings: null,
-      allowHTML: false,
-      includeRowId: false,
-      textDataOverride: 'data-override',
-      extractor: null,
-      textExtractor: null
-    };
-    opts = $.extend(defaults, opts);
-
-    var notNull = function(value) {
-      return value !== undefined && value !== null;
-    };
-
-    var ignoredColumn = function(index) {
-      if( notNull(opts.onlyColumns) ) {
-        return $.inArray(index, opts.onlyColumns) === -1;
-      }
-      return $.inArray(index, opts.ignoreColumns) !== -1;
-    };
-
-    var arraysToHash = function(keys, values) {
-      var result = {}, index = 0;
-      $.each(values, function(i, value) {
-        // when ignoring columns, the header option still starts
-        // with the first defined column
-        if ( index < keys.length && notNull(value) ) {
-          result[ keys[index] ] = value;
-          index++;
-        }
-      });
-      return result;
-    };
-
-    var cellValues = function(cellIndex, cell, isHeader) {
-      var $cell = $(cell),
-        // extractor
-        extractor = opts.extractor || opts.textExtractor,
-        override = $cell.attr(opts.textDataOverride),
-        value;
-      // don't use extractor for header cells
-      if ( extractor === null || isHeader ) {
-        return $.trim( override || ( opts.allowHTML ? $cell.html() : cell.textContent || $cell.text() ) || '' );
-      } else {
-        // overall extractor function
-        if ( $.isFunction(extractor) ) {
-          value = override || extractor(cellIndex, $cell);
-          return typeof value === 'string' ? $.trim( value ) : value;
-        } else if ( typeof extractor === 'object' && $.isFunction( extractor[cellIndex] ) ) {
-          value = override || extractor[cellIndex](cellIndex, $cell);
-          return typeof value === 'string' ? $.trim( value ) : value;
-        }
-      }
-      // fallback
-      return $.trim( override || ( opts.allowHTML ? $cell.html() : cell.textContent || $cell.text() ) || '' );
-    };
-
-    var rowValues = function(row, isHeader) {
-      var result = [];
-      var includeRowId = opts.includeRowId;
-      var useRowId = (typeof includeRowId === 'boolean') ? includeRowId : (typeof includeRowId === 'string') ? true : false;
-      var rowIdName = (typeof includeRowId === 'string') === true ? includeRowId : 'rowId';
-      if (useRowId) {
-        if (typeof $(row).attr('id') === 'undefined') {
-          result.push(rowIdName);
-        }
-      }
-      $(row).children('td,th').each(function(cellIndex, cell) {
-        result.push( cellValues(cellIndex, cell, isHeader) );
-      });
-      return result;
-    };
-
-    var getHeadings = function(table) {
-      var firstRow = table.find('tr:first').first();
-      return notNull(opts.headings) ? opts.headings : rowValues(firstRow, true);
-    };
-
-    var construct = function(table, headings) {
-      var i, j, len, len2, txt, $row, $cell,
-        tmpArray = [], cellIndex = 0, result = [];
-      table.children('tbody,*').children('tr').each(function(rowIndex, row) {
-        if( rowIndex > 0 || notNull(opts.headings) ) {
-          var includeRowId = opts.includeRowId;
-          var useRowId = (typeof includeRowId === 'boolean') ? includeRowId : (typeof includeRowId === 'string') ? true : false;
-
-          $row = $(row);
-
-          var isEmpty = ($row.find('td').length === $row.find('td:empty').length) ? true : false;
-
-          if( ( $row.is(':visible') || !opts.ignoreHiddenRows ) && ( !isEmpty || !opts.ignoreEmptyRows ) && ( !$row.data('ignore') || $row.data('ignore') === 'false' ) ) {
-            cellIndex = 0;
-            if (!tmpArray[rowIndex]) {
-              tmpArray[rowIndex] = [];
-            }
-            if (useRowId) {
-              cellIndex = cellIndex + 1;
-              if (typeof $row.attr('id') !== 'undefined') {
-                tmpArray[rowIndex].push($row.attr('id'));
-              } else {
-                tmpArray[rowIndex].push('');
-              }
-            }
-
-            $row.children().each(function(){
-              $cell = $(this);
-              // skip column if already defined
-              while (tmpArray[rowIndex][cellIndex]) { cellIndex++; }
-
-              // process rowspans
-              if ($cell.filter('[rowspan]').length) {
-                len = parseInt( $cell.attr('rowspan'), 10) - 1;
-                txt = cellValues(cellIndex, $cell);
-                for (i = 1; i <= len; i++) {
-                  if (!tmpArray[rowIndex + i]) { tmpArray[rowIndex + i] = []; }
-                  tmpArray[rowIndex + i][cellIndex] = txt;
-                }
-              }
-              // process colspans
-              if ($cell.filter('[colspan]').length) {
-                len = parseInt( $cell.attr('colspan'), 10) - 1;
-                txt = cellValues(cellIndex, $cell);
-                for (i = 1; i <= len; i++) {
-                  // cell has both col and row spans
-                  if ($cell.filter('[rowspan]').length) {
-                    len2 = parseInt( $cell.attr('rowspan'), 10);
-                    for (j = 0; j < len2; j++) {
-                      tmpArray[rowIndex + j][cellIndex + i] = txt;
-                    }
-                  } else {
-                    tmpArray[rowIndex][cellIndex + i] = txt;
-                  }
-                }
-              }
-
-              txt = tmpArray[rowIndex][cellIndex] || cellValues(cellIndex, $cell);
-              if (notNull(txt)) {
-                tmpArray[rowIndex][cellIndex] = txt;
-              }
-              cellIndex++;
-            });
-          }
-        }
-      });
-      $.each(tmpArray, function( i, row ){
-        if (notNull(row)) {
-          // remove ignoredColumns / add onlyColumns
-          var newRow = notNull(opts.onlyColumns) || opts.ignoreColumns.length ?
-            $.grep(row, function(v, index){ return !ignoredColumn(index); }) : row,
-
-            // remove ignoredColumns / add onlyColumns if headings is not defined
-            newHeadings = notNull(opts.headings) ? headings :
-              $.grep(headings, function(v, index){ return !ignoredColumn(index); });
-
-          txt = arraysToHash(newHeadings, newRow);
-          result[result.length] = txt;
-        }
-      });
-      return result;
-    };
-
-    // Run
-    var headings = getHeadings(this);
-    return construct(this, headings);
-  };
-})( jQuery );
-
+function slider_weight(){
+					$(".weight-slider").ionRangeSlider({
+							  type: "single",
+							  min: 0,
+							  max: 100,
+							  step:5,
+							  grid: true,
+							  disable: false
+							  }).data("ionRangeSlider").update();	
+}
 
 
