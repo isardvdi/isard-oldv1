@@ -140,12 +140,10 @@
     </div>
 </div>
 
-
-
 <div class="modal fade" id="modalAddPool" tabindex="-1" role="dialog" 
      aria-labelledby="modalAddPool" aria-hidden="true">
     <div class="modal-dialog" style="  width: 90%; height: 90%; margin-left: 100px;">
-        <div class="modal-content"  style="background-color:lightGray">
+        <div class="modal-content"  style="background-color:#ededed">
             <!-- Modal Header -->
             <div class="modal-header">   
                 <button type="button" class="close" 
@@ -159,10 +157,8 @@
             </div>
             
             <!-- Modal Body -->
-            <div class="modal-body" style="background-color:lightGray">
+            <div class="modal-body" style="background-color:#f7f7f7">
               <form id="modalAdd" class="form-horizontal form-label-left" action="{{ url_for('admin_hypervisors_pools') }}" method="POST" novalidate>
-				<div class="row">
-			     <div class="col-md-6 col-sm-6 col-xs-12">
 				  <div class="x_panel">
 						<div class="x_content">
 						 <div class="item form-group">
@@ -181,188 +177,217 @@
 						 </div>
 					</div>
 				  </div>
+                  
+                   <div class="" role="tabpanel" data-example-id="togglable-tabs">
+                      <ul id="myTab" class="nav nav-tabs bar_tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#tab_paths" id="tab-paths" role="tab" data-toggle="tab" aria-expanded="true">Paths</a>
+                        </li>
+                        <li role="presentation" class=""><a href="#tab_interfaces" role="tab" id="tab-interfaces" data-toggle="tab" aria-expanded="false">Interfaces/Viewer</a>
+                        </li>
+                        <li role="presentation" class=""><a href="#tab_balancer" role="tab" id="tab-balancer" data-toggle="tab" aria-expanded="false">Balancer</a>
+                        </li>
+                      </ul>
+                      <div id="myTabContent" class="tab-content">
+                        <div role="tabpanel" class="tab-pane fade active in" id="tab_paths" aria-labelledby="tab-paths">
+                            <div class="x_panel">
+                            <div class="x_content">
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div class="row">
+                                        <button id="test" type="button" class="btn btn-success">Create pool</button>
+                                           <input id="table_paths" placeholder="Absolute path (/isard/bases)" type="text">
+                                            <input id="table_diskop" placeholder="" type="text">
+                                            <input id="table-weights" class="form-control col-md-7 col-xs-12 weight-slider" type="text">
+                                    <table id="table_paths" class="display">
+                                      <thead>
+                                        <tr>
+                                          <th>path</th>
+                                          <th>disk_operations</th>
+                                          <th>weight</th>
+                                          <th>action</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
 
-				  <div class="x_panel">
-						 <div class="x_title">
-							<h2>System Paths<small></small></h2>
-							<ul class="nav navbar-right panel_toolbox">
-							   <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-							   </li>
-							</ul>
-							<div class="clearfix"></div>
-						 </div>
-						 <div class="x_content">
+                                      </tbody>
+                                    </table>
+                                    
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-2 col-sm-2 col-xs-12">
+                                            <label class="control-label">Bases
+                                            </label>
+                                        </div>
+                                        <div class="col-md-10 col-sm-10 col-xs-12">
+                                            <div class="row"></div>
+                                            
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases">Paths <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <select id="paths-bases" name="paths-bases" class="paths-tags" style="width:100%"  multiple="multiple"></select>
+                                                    </div>
+                                                </div>
 
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-disk_operations">Disk operations <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <select id="paths-bases-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-weight">Weight <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-bases-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-bases-weight" placeholder="Absolute path (/isard/bases)" required="required" type="text">
+                                                    </div>
+                                                </div>
+                                                
+                                           </div> 
+                                    </div> 
+                                    <hr>
 
+                                    <div class="row">
+                                        <div class="col-md-2 col-sm-2 col-xs-12">
+                                            <label class="control-label">Templates
+                                            </label>
+                                        </div>
+                                        <div class="col-md-10 col-sm-10 col-xs-12">
+                                            <div class="row"></div>
+                                            
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates">Path <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <select id="paths-templates" name="paths-templates" class="paths-tags" style="width:100%"  multiple="multiple"></select>
+            <!--
+                                                       <input id="paths-templates" class="form-control col-md-7 col-xs-12" name="paths-templates" placeholder="Absolute path (/isard/templates)" required="required" type="text">
+            -->
+                                                    </div>
+                                                </div>
 
-						<div class="row">
-							<div class="col-md-2 col-sm-2 col-xs-12">
-								<label class="control-label">Bases
-								</label>
-							</div>
-							<div class="col-md-10 col-sm-10 col-xs-12">
-								<div class="row"></div>
-								
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases">Path <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-bases" class="form-control col-md-7 col-xs-12" name="paths-bases" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-										</div>
-									</div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-disk_operations">Disk operations <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <select id="paths-templates-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-disk_operations">Disk operations <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-bases-disk_operations" class="form-control col-md-7 col-xs-12" name="paths-bases-disk_operations" placeholder="Absolute path (/isard/bases)" required="required" type="text">
-										</div>
-									</div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-weight">Weight <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-templates-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-templates-weight" placeholder="Absolute path (/isard/templates)" required="required" type="text">
+                                                    </div>
+                                                </div>
+                                                
+                                           </div> 
+                                    </div> 
+                                    <hr>
+                                </div>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                    <div class="row">
+                                        <div class="col-md-2 col-sm-2 col-xs-12">
+                                            <label class="control-label">groups
+                                            </label>
+                                        </div>
+                                        <div class="col-md-10 col-sm-10 col-xs-12">
+                                            <div class="row"></div>
+                                            
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups">Path <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-groups" class="form-control col-md-7 col-xs-12" name="paths-groups" placeholder="Absolute path (/isard/groups)" required="required" type="text">
+                                                    </div>
+                                                </div>
 
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-bases-weight">Weight <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-bases-weight" class="form-control col-md-7 col-xs-12" name="paths-bases-weight" placeholder="Absolute path (/isard/bases)" required="required" type="text">
-										</div>
-									</div>
-									
-							   </div> 
-						</div> 
-						<hr>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-disk_operations">Disk operations <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <select id="paths-groups-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
+                                                        </select>                                            
+                                                    </div>
+                                                </div>
 
-						<div class="row">
-							<div class="col-md-2 col-sm-2 col-xs-12">
-								<label class="control-label">Templates
-								</label>
-							</div>
-							<div class="col-md-10 col-sm-10 col-xs-12">
-								<div class="row"></div>
-								
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates">Path <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-templates" class="form-control col-md-7 col-xs-12" name="paths-templates" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-										</div>
-									</div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-weight">Weight <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-groups-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-groups-weight" placeholder="Absolute path (/isard/groups)" required="required" type="text">
+                                                    </div>
+                                                </div>
+                                                
+                                           </div> 
+                                    </div> 
+                                    <hr>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-2 col-sm-2 col-xs-12">
+                                            <label class="control-label">isos
+                                            </label>
+                                        </div>
+                                        <div class="col-md-10 col-sm-10 col-xs-12">
+                                            <div class="row"></div>
+                                            
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos">Path <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-isos" class="form-control col-md-7 col-xs-12" name="paths-isos" placeholder="Absolute path (/isard/isos)" required="required" type="text">
+                                                    </div>
+                                                </div>
 
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-disk_operations">Disk operations <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-templates-disk_operations" class="form-control col-md-7 col-xs-12" name="paths-templates-disk_operations" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-										</div>
-									</div>
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-disk_operations">Disk operations <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                        <select id="paths-isos-disk_operations" style="width:100%" class="hyper-list"  multiple="multiple">
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-templates-weight">Weight <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-templates-weight" class="form-control col-md-7 col-xs-12" name="paths-templates-weight" placeholder="Absolute path (/isard/templates)" required="required" type="text">
-										</div>
-									</div>
-									
-							   </div> 
-						</div> 
-						<hr>
-						
-						<div class="row">
-							<div class="col-md-2 col-sm-2 col-xs-12">
-								<label class="control-label">groups
-								</label>
-							</div>
-							<div class="col-md-10 col-sm-10 col-xs-12">
-								<div class="row"></div>
-								
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups">Path <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-groups" class="form-control col-md-7 col-xs-12" name="paths-groups" placeholder="Absolute path (/isard/groups)" required="required" type="text">
-										</div>
-									</div>
-
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-disk_operations">Disk operations <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-groups-disk_operations" class="form-control col-md-7 col-xs-12" name="paths-groups-disk_operations" placeholder="Absolute path (/isard/groups)" required="required" type="text">
-										</div>
-									</div>
-
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-groups-weight">Weight <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-groups-weight" class="form-control col-md-7 col-xs-12" name="paths-groups-weight" placeholder="Absolute path (/isard/groups)" required="required" type="text">
-										</div>
-									</div>
-									
-							   </div> 
-						</div> 
-						<hr>
-						
-						<div class="row">
-							<div class="col-md-2 col-sm-2 col-xs-12">
-								<label class="control-label">isos
-								</label>
-							</div>
-							<div class="col-md-10 col-sm-10 col-xs-12">
-								<div class="row"></div>
-								
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos">Path <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-isos" class="form-control col-md-7 col-xs-12" name="paths-isos" placeholder="Absolute path (/isard/isos)" required="required" type="text">
-										</div>
-									</div>
-
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-disk_operations">Disk operations <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-isos-disk_operations" class="form-control col-md-7 col-xs-12" name="paths-isos-disk_operations" placeholder="Absolute path (/isard/isos)" required="required" type="text">
-										</div>
-									</div>
-
-									<div class="item form-group">
-										<label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-weight">Weight <span class="required">*</span>
-										</label>
-										<div class="col-md-9 col-sm-9 col-xs-12">
-										   <input id="paths-isos-weight" class="form-control col-md-7 col-xs-12" name="paths-isos-weight" placeholder="Absolute path (/isard/isos)" required="required" type="text">
-										</div>
-									</div>
-									
-							   </div> 
-						</div>                                                             
-						
-					</div>
-				</div>
-			     
-			     </div>
-			     <div class="col-md-6 col-sm-6 col-xs-12">
-				  <div class="x_panel">
-						 <div class="x_title">
-							<h2>Network Interfaces<small></small></h2>
-							<ul class="nav navbar-right panel_toolbox">
-							   <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
-							   </li>
-							</ul>
-							<div class="clearfix"></div>
-						 </div>
-						 <div class="x_content"> 
-						<div class="item form-group">
-							<label>Interfaces:</label>
-							<select class="form-control" id="interfaces" name="interfaces">
-							<option value="default" selected="selected">Default</option>
-							</select>
-						</div>                
-					</div>
-				  </div>
-
-				  <div class="x_panel">
+                                                <div class="item form-group">
+                                                    <label class="control-label col-md-3 col-sm-3 col-xs-12" for="paths-isos-weight">Weight <span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-9 col-sm-9 col-xs-12">
+                                                       <input id="paths-isos-weight" class="form-control col-md-7 col-xs-12 weight-slider" name="paths-isos-weight" placeholder="Absolute path (/isard/isos)" required="required" type="text">
+                                                    </div>
+                                                </div>
+                                                
+                                           </div> 
+                                    </div>                                                             
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane fade" id="tab_interfaces" aria-labelledby="tab-interfaces">
+                             <div class="col-md-6 col-sm-6 col-xs-12">
+                              <div class="x_panel">
+                                     <div class="x_title">
+                                        <h2>Network Interfaces<small></small></h2>
+                                        <ul class="nav navbar-right panel_toolbox">
+                                           <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                                           </li>
+                                        </ul>
+                                        <div class="clearfix"></div>
+                                     </div>
+                                     <div class="x_content"> 
+                                    <div class="item form-group">
+                                        <label>Interfaces:</label>
+                                        <select class="form-control" id="interfaces" name="interfaces">
+                                        <option value="default" selected="selected">Default</option>
+                                        </select>
+                                    </div>                
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                              <div class="x_panel">
 						 <div class="x_title">
 							<h2>Viewer<small></small></h2>
 							<ul class="nav navbar-right panel_toolbox">
@@ -395,39 +420,48 @@
 						 </div>
 					</div>
 				  </div>
-					 
-					<div class="x_panel">
-						 <div class="x_title">
-							<h2>Load balancer<small></small></h2>
-							<ul class="nav navbar-right panel_toolbox">
-							   <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
-							   </li>
-							</ul>
-							<div class="clearfix"></div>
-						 </div>
-						 <div class="x_content"> 
-							<div class="col-md-6 col-sm-6 col-xs-12">
-									<label>CPU Idle (avg)</label>
-									<input id="weights-avg_cpu_idle-weight" name="weights-avg_cpu_idle-weight"/>
-							</div>
-							<div class="col-md-6 col-sm-6 col-xs-12">
-									<label>CPU Freq (constant)</label>
-									<input id="weights-cpu_freq-weight" name="weights-cpu_freq-weight"/>
-							</div>
-							<div class="col-md-6 col-sm-6 col-xs-12">
-									<label>RAM free (now)</label>
-									<input id="weights-free_memory-weight" name="weights-free_memory-weight"/>
-							</div>					
+                            </div>
+                        </div>
+<!--
+                        <div role="tabpanel" class="tab-pane fade" id="tab_viewer" aria-labelledby="tab-viewer">
 
-							<div class="col-md-6 col-sm-6 col-xs-12">
-									<label>IO Wait (max)</label>
-									<input id="weights-io_wait_peaks-weight" name="weights-io_wait_peaks-weight"/>
-							</div>
-							
-					</div>
-				  </div>					
-			     </div>
-				</div>
+                        </div>
+-->
+                        <div role="tabpanel" class="tab-pane fade" id="tab_balancer" aria-labelledby="tab-balancer">
+                            <div class="x_panel">
+                                 <div class="x_title">
+                                    <h2>Load balancer<small></small></h2>
+                                    <ul class="nav navbar-right panel_toolbox">
+                                       <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                                       </li>
+                                    </ul>
+                                    <div class="clearfix"></div>
+                                 </div>
+                                 <div class="x_content"> 
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <label>CPU Idle (avg)</label>
+                                            <input id="weights-avg_cpu_idle-weight" name="weights-avg_cpu_idle-weight"/>
+                                    </div>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <label>CPU Freq (constant)</label>
+                                            <input id="weights-cpu_freq-weight" name="weights-cpu_freq-weight"/>
+                                    </div>
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <label>RAM free (now)</label>
+                                            <input id="weights-free_memory-weight" name="weights-free_memory-weight"/>
+                                    </div>					
+
+                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                            <label>IO Wait (max)</label>
+                                            <input id="weights-io_wait_peaks-weight" name="weights-io_wait_peaks-weight"/>
+                                    </div>
+                                    
+                            </div>
+                          </div>					
+
+                        </div>
+                      </div>
+                    </div>
 
             </div>
                        
@@ -444,5 +478,6 @@
         </div>
     </div>
 </div>
+
 
 

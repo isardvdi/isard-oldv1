@@ -8,6 +8,30 @@
 $hypervisor_template = $(".hyper-detail");
 
 $(document).ready(function() {
+//~ $("select").select2({
+  //~ tags: true
+//~ }).sortable();
+
+//~ $("select").on("select2:select", function (evt) {
+  //~ var element = evt.params.data.element;
+  //~ var $element = $(element);
+  
+  //~ $element.detach();
+  //~ $(this).append($element);
+  //~ $(this).trigger("change");
+//~ });
+
+    //~ $("#sortable").sortable();
+//~ $("#pepino").select2({tags:true});
+//~ $("#pepino").on("change", function() { $("#e15_val").html($("#e15").val());});
+
+//~ $("#pepino").find("select").sortable({
+    //~ containment: 'parent',
+    //~ start: function() { $("#pepino").select2("onSortStart"); },
+    //~ update: function() { $("#pepino").select2("onSortEnd"); }
+//~ });
+    
+    
 	$('.btn-new-hyper').on('click', function () {
 			$('#modalAddHyper').modal({
 				backdrop: 'static',
