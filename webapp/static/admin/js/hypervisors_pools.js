@@ -7,6 +7,7 @@
 
 $hypervisor_pool_template = $(".hyper-pool-detail");
 $(document).ready(function() {
+
 	$('#modalAddPool').on('hidden.bs.modal', function(){
         $(this).find('form')[0].reset();
         console.log('reset')
@@ -14,6 +15,7 @@ $(document).ready(function() {
         slider_freqcpu.reset()
         slider_freemem.reset()
         slider_iowait.reset()
+
     });
     //~ $('[data-dismiss=modal]').on('click', function (e) {
         //~ var $t = $(this),
@@ -31,7 +33,9 @@ $(document).ready(function() {
 				backdrop: 'static',
 				keyboard: false
 			}).modal('show');
-
+            slider_weight();
+            hyper_list();
+            interfaces_list();
                 //~ $('.paths-tags').select2({
                     //~ tags: true,
                     //~ tokenSeparators: [",", " "]
@@ -48,44 +52,48 @@ $(document).ready(function() {
 
                 
             
-                $('#table_bases_add').on('click', function () {
+                $('.table_bases_add').on('click', function () {
                     $('#table_bases tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/bases)" type="text"></th>\
-								<th><input name="disk_operations" placeholder="" type="text"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/bases)" type="text" style="width:95%"></th>\
+								<th><select name="disk_operations" class="hyper_list" placeholder="" style="width:95%"></select></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
 								</tr>');
 
 					slider_weight();
+                    hyper_list();
                 });
 
                 $('#table_templates_add').on('click', function () {
                     $('#table_templates tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/templates)" type="text"></th>\
-								<th><input name="disk_operations" placeholder="" type="text"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/templates)" type="text" style="width:95%"></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
 								</tr>');
 
 					slider_weight();
+                    hyper_list();
                 });
 
                 $('#table_groups_add').on('click', function () {
                     $('#table_groups tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/groups)" type="text"></th>\
-								<th><input name="disk_operations" placeholder="" type="text"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/groups)" type="text" style="width:95%"></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
 								</tr>');
 
 					slider_weight();
+                    hyper_list();
                 });
 
                 $('#table_isos_add').on('click', function () {
                     $('#table_isos tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/isos)" type="text"></th>\
-								<th><input name="disk_operations" placeholder="" type="text"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/isos)" type="text" style="width:95%"></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
 								</tr>');
 
 					slider_weight();
+                    hyper_list();
                 });
                                                             
 				$("#weights-avg_cpu_idle-weight").ionRangeSlider({
@@ -126,45 +134,15 @@ $(document).ready(function() {
 						  }).data("ionRangeSlider").update();	
                 slider_iowait = $("#weights-io_wait_peaks-weight").data("ionRangeSlider");
 
-				$(".weight-slider").ionRangeSlider({
-						  type: "single",
-						  min: 0,
-						  max: 100,
-                          step:5,
-						  grid: true,
-						  disable: false
-						  }).data("ionRangeSlider").update();	
-                $('.hyper-list').select2({
-                  multiple: true,
-                  ajax: {
-                    url: "/admin/hypervisors/json",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                      return {
-                        q: params.id, // search term
-                        page: params.page
-                      };
-                    },
-                    processResults: function (data, page) {
-                      // parse the results into the format expected by Select2.
-                      // since we are using custom formatting functions we do not need to
-                      // alter the remote JSON data
-                           console.log(data);
-                      return {
-                       
-                        results: data.id
-                      };
-                    },
-                    cache: true
-                  },
-                 escapeMarkup: function (markup) { return markup; },
-                    minimumInputLength: 1,
-                    //~ templateResult: formatRepo,
-                    //~ templateSelection: formatRepoSelection
-
-                });
-                
+				//~ $(".weight-slider").ionRangeSlider({
+						  //~ type: "single",
+						  //~ min: 0,
+						  //~ max: 100,
+                          //~ step:5,
+						  //~ grid: true,
+						  //~ disable: false
+						  //~ }).data("ionRangeSlider").update();	
+             
 	});
 
     var tablepools = $('#hypervisors_pools').DataTable( {
@@ -259,4 +237,69 @@ function slider_weight(){
 							  }).data("ionRangeSlider").update();	
 }
 
+function hyper_list(){
+                $('.hyper_list').select2({
+                    tags: true,
+                    multiple: true,
+                    tokenSeparators: [',', ' '],
+                    //~ minimumInputLength: 2,
+                    //~ minimumResultsForSearch: 10,
+                    ajax: {
+                        url: "/admin/hypervisors/json",
+                        dataType: "json",
+                        type: "GET",
+                        data: function (params) {
+
+                            var queryParameters = {
+                                term: params.term
+                            }
+                            return queryParameters;
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $.map(data, function (item) {
+                                    return {
+                                        text: item.id,
+                                        id: item.id
+                                    }
+                                })
+                            };
+                        }
+                    }
+                });
+       
+}
+
+function interfaces_list(){
+                $('#interfaces').select2({
+                    tags: true,
+                    multiple: true,
+                    tokenSeparators: [',', ' '],
+                    //~ minimumInputLength: 2,
+                    //~ minimumResultsForSearch: 10,
+                    ajax: {
+                        url: "/admin/table/interfaces/get",
+                        dataType: "json",
+                        type: "GET",
+                        data: function (params) {
+
+                            var queryParameters = {
+                                term: params.term
+                            }
+                            return queryParameters;
+                        },
+                        processResults: function (data) {
+                            return {
+                                results: $.map(data, function (item) {
+                                    return {
+                                        text: item.name,
+                                        id: item.id
+                                    }
+                                })
+                            };
+                        }
+                    }
+                });
+       
+}
 

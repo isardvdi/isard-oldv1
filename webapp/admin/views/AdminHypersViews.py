@@ -111,33 +111,34 @@ def admin_hypervisors_update():
 @app.route('/admin/hypervisors/json/<id>')
 @login_required
 def admin_hypervisors_json(id=None):
-    domain = app.adminapi.get_admin_hypervisors(id)
-    return json.dumps(domain), 200, {'ContentType':'application/json'} 
+    hypervisors = app.adminapi.get_admin_hypervisors(id)
+    return json.dumps(hypervisors), 200, {'ContentType':'application/json'} 
 
-@app.route('/stream/admin/hypers')
-@login_required
-def admin_stream_hypers():
-        return Response(stream_hypers(), mimetype='text/event-stream')    
+#~ @app.route('/stream/admin/hypers')
+#~ @login_required
+#~ def admin_stream_hypers():
+        #~ return Response(stream_hypers(), mimetype='text/event-stream')    
 
-def stream_hypers():
-        with app.app_context():
-            for c in r.table('hypervisors').merge({"table": "hypervisors"}).changes(include_initial=False).union(
-                        r.table('hypervisors_status').merge({"table": "hypervisors_status"}).changes(include_initial=False)).run(db.conn):
-                if c['new_val'] is None:
-                    if c['old_val']['table'] is 'hypervisors':
-                        yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('Deleted',time.time(),json.dumps(c['old_val']['id']))
-                        continue
-                if 'old_val' not in c:
-                    if c['old_val']['table'] is 'hypervisors':
-                        yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('New',time.time(),json.dumps(app.isardapi.f.flatten_dict(c['new_val'])))   
-                        continue             
-                if 'detail' not in c['new_val']: c['new_val']['detail']=''
-                yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('hypervisors',time.time(),json.dumps(app.isardapi.f.flatten_dict(c['new_val'])))
+#~ def stream_hypers():
+        #~ with app.app_context():
+            #~ for c in r.table('hypervisors').merge({"table": "hypervisors"}).changes(include_initial=False).union(
+                        #~ r.table('hypervisors_status').merge({"table": "hypervisors_status"}).changes(include_initial=False)).run(db.conn):
+                #~ if c['new_val'] is None:
+                    #~ if c['old_val']['table'] is 'hypervisors':
+                        #~ yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('Deleted',time.time(),json.dumps(c['old_val']['id']))
+                        #~ continue
+                #~ if 'old_val' not in c:
+                    #~ if c['old_val']['table'] is 'hypervisors':
+                        #~ yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('New',time.time(),json.dumps(app.isardapi.f.flatten_dict(c['new_val'])))   
+                        #~ continue             
+                #~ if 'detail' not in c['new_val']: c['new_val']['detail']=''
+                #~ yield 'retry: 5000\nevent: %s\nid: %d\ndata: %s\n\n' % ('hypervisors',time.time(),json.dumps(app.isardapi.f.flatten_dict(c['new_val'])))
 
-@app.route('/admin/hypervisors/get')
-@login_required
-def admin_hypervisors_get():
-    return json.dumps(app.adminapi.get_admin_hypervisors()), 200, {'ContentType': 'application/json'}
+#~ @app.route('/admin/hypervisors/get')
+#~ @login_required
+#~ def admin_hypervisors_get():
+    #~ hypervisors=app.adminapi.get_admin_hypervisors()
+    #~ return json.dumps(hypervisors), 200, {'ContentType': 'application/json'}
 
 @app.route('/admin/hypervisors_pools', methods=['GET','POST'])
 @login_required
@@ -145,6 +146,8 @@ def admin_hypervisors_pools():
     res=True
     if request.method == 'POST':
         create_dict=app.isardapi.f.unflatten_dict(request.form)
+        import pprint
+        pprint.pprint(create_dict)
         create_dict['viewer']['certificate']=ca
         #check and parse name not done!
         create_dict['id']=create_dict['name']

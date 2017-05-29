@@ -197,8 +197,18 @@
 											<div class="col-md-2 col-sm-2 col-xs-12">
 												<label class="control-label">Bases
 												</label>
-											</div>										
-											<button id="table_bases_add" type="button" class="btn btn-success">Add base</button>
+											</div>		
+                                            <ul class="nav navbar-right panel_toolbox">
+                                               <li><a class="table_bases_add"><span
+                                                       style="color: #5499c7; "><i class="fa fa-plus"></i> Add base path</span></a>
+<!--
+                                               <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                               </li>
+-->
+                                            </ul>								
+<!--
+											<button id="table_bases_add" type="button" class="btn btn-info">Add base</button>
+-->
 											<table id="table_bases" class="display">
 											  <thead>
 												<tr>
@@ -208,7 +218,11 @@
 												</tr>
 											  </thead>
 											  <tbody>
-
+                                                <tr>
+                                                    <th><input name="path" placeholder="Absolute path (/isard/bases)" type="text" style="width:95%"></th>
+                                                    <th><select name="disk_operations" class="hyper_list" style="width:95%"></select></th>
+                                                    <th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>
+                                                </tr>
 											  </tbody>
 											</table>
 										</div>
@@ -221,7 +235,7 @@
 												<label class="control-label">Templates
 												</label>
 											</div>										
-											<button id="table_templates_add" type="button" class="btn btn-success">Add template</button>
+											<button id="table_templates_add" type="button" class="btn btn-info">Add template</button>
 											<table id="table_templates" class="display">
 											  <thead>
 												<tr>
@@ -231,7 +245,11 @@
 												</tr>
 											  </thead>
 											  <tbody>
-
+                                                <tr>
+                                                    <th><input name="path" placeholder="Absolute path (/isard/templates)" type="text" style="width:95%"></th>
+                                                    <th><select name="disk_operations" class="hyper_list" style="width:95%"></select></th>
+                                                    <th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>
+                                                </tr>
 											  </tbody>
 											</table>
 										</div>
@@ -245,7 +263,7 @@
 												<label class="control-label">Group
 												</label>
 											</div>										
-											<button id="table_groups_add" type="button" class="btn btn-success">Add group</button>
+											<button id="table_groups_add" type="button" class="btn btn-info">Add group</button>
 											<table id="table_groups" class="display">
 											  <thead>
 												<tr>
@@ -255,7 +273,11 @@
 												</tr>
 											  </thead>
 											  <tbody>
-
+                                                <tr>
+                                                    <th><input name="path" placeholder="Absolute path (/isard/groups)" type="text" style="width:95%"></th>
+                                                    <th><select name="disk_operations" class="hyper_list" style="width:95%"></select></th>
+                                                    <th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>
+                                                </tr>
 											  </tbody>
 											</table>
 										</div>
@@ -268,7 +290,7 @@
 												<label class="control-label">Isos
 												</label>
 											</div>										
-											<button id="table_isos_add" type="button" class="btn btn-success">Add iso</button>
+											<button id="table_isos_add" type="button" class="btn btn-info">Add iso</button>
 											<table id="table_isos" class="display">
 											  <thead>
 												<tr>
@@ -278,7 +300,11 @@
 												</tr>
 											  </thead>
 											  <tbody>
-
+                                                <tr>
+                                                    <th><input name="path" placeholder="Absolute path (/isard/isos)" type="text" style="width:95%"></th>
+                                                    <th><select name="disk_operations" class="hyper_list" style="width:95%"></select></th>
+                                                    <th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>
+                                                </tr>
 											  </tbody>
 											</table>
 										</div>
@@ -301,8 +327,10 @@
                                      <div class="x_content"> 
                                     <div class="item form-group">
                                         <label>Interfaces:</label>
-                                        <select class="form-control" id="interfaces" name="interfaces">
+                                        <select class="form-control" id="interfaces" name="interfaces" style="width:100%">
+<!--
                                         <option value="default" selected="selected">Default</option>
+-->
                                         </select>
                                     </div>                
                                 </div>
@@ -320,10 +348,10 @@
 						 </div>
 						 <div class="x_content"> 
 						<div class="item form-group">
-							<label>Interfaces:</label>
+							<label>Type:</label>
 							<select class="form-control" id="viewer-defaultMode" name="viewer-defaultMode">
-							<option value="Secure" selected="selected">Secure</option>
-							<option value="Insecure" >Insecure</option>
+							<option value="Secure" selected="selected">Secure (Encrypted, add domain and certificate)</option>
+							<option value="Insecure" >Insecure (Plain connection, no need for domain and certificate)</option>
 							</select>
 						</div>  
 						 <div class="item form-group">
