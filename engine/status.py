@@ -13,10 +13,11 @@ import traceback
 from .log import *
 from .config import CONFIG_DICT, POLLING_INTERVAL_TRANSITIONAL_STATES
 from .hyp import hyp
+from .pool_hypervisors import pools_stats
 from .functions import state_and_cause_to_str, dict_domain_libvirt_state_to_isard_state
-from .db import get_hyp_hostnames_online, get_last_hyp_status, insert_db_hyp_status, get_config_branch
+from .db import get_hyp_hostnames_online, get_last_hyp_status, insert_db_hyp_status, get_pools_from_hyp
 from .db import get_last_domain_status, insert_db_domain_status, get_hyp_hostname_from_id, update_hypervisor_failed_connection
-from .db import get_domain_hyp_started_and_status_and_detail, update_domain_hyp_started, exist_domain,get_domains_with_transitional_status
+from .db import get_hyp, update_domain_hyp_started, exist_domain,get_domains_with_transitional_status
 from .db import update_domain_status
 
 
@@ -27,12 +28,14 @@ max_len_fifo_hyps = int(CONFIG_DICT['STATS']['max_queue_hyps_status'])
 
 
 class UpdateStatus():
-    def __init__(self, id, hostname,port=22,user='root'):
-        self.id = id
+    def __init__(self, hyp_id, hostname,port=22,user='root'):
+        self.id = hyp_id
         self.hostname = hostname
         self.user = user
         self.port = port
         self.hyp_obj = hyp(hostname,user=self.user,port=self.port)
+        self.pools = get_pools_from_hyp(hyp_id)
+        self.hyp_info = get_hyp(hyp_id)
 
     def update_status_hyps_rethink(self):
         dict_hyp_status = dict()
@@ -80,6 +83,12 @@ class UpdateStatus():
 
             dict_last_hyp_status = get_last_hyp_status(self.id)
 
+            # rate virtual_cpus / real_cpus_threads
+            real_cpu_threads = self.hyp_info['info']['cpu_threads']
+
+
+            dict_last_hyp_status = get_last_hyp_status(self.id)
+
             if dict_last_hyp_status is not None:
                 try:
                     dict_hyp_status['cpu_percent'] = calcule_cpu_stats(dict_last_hyp_status['load']['cpu_load'],
@@ -122,6 +131,9 @@ class UpdateStatus():
                 # #OJO INFO TO DEVELOPER
                 # log.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
                 # threading_enumerate()
+
+                #
+
                 insert_db_domain_status(dict_domain)
 
                 # INFO TO DEVELOPER, REVISAR SI EL ESTADO NO ES STARTED
@@ -139,7 +151,7 @@ class UpdateStatus():
                 #     elif dict_domain['status']['hyp'] != in_db_domain['hyp_started']:
                 #         ## OJO INFO TO DEVELOPER, NO MODIFICAMOS ESTADO
                 #         if dict_domain['status']['state'] ==  'running':
-                #             update_domain_hyp_started(domain_id=name,
+                #             update_domain_hyp_started  (domain_id=name,
                 #                                       hyp_id=dict_domain['status']['hyp'],
                 #                                       detail=dict_domain['status']['state_reason'])
                 # self.hyp_obj.disconnect()
@@ -149,6 +161,33 @@ class UpdateStatus():
             dict_hyp_status['connected'] = False
             dict_hyp_status['when'] = now
 
+        d_values = {}
+        d_values['cpu_freq'] = self.hyp_info['info']['cpu_mhz']
+        if dict_hyp_status['cpu_percent'] is not False:
+            d_values['cpu_idle'] = dict_hyp_status['cpu_percent']['idle']
+            d_values['cpu_iowait'] = dict_hyp_status['cpu_percent']['iowait']
+        else:
+            d_values['cpu_idle'] = None
+            d_values['cpu_iowait'] = None
+        d_values['vcpus'] = dict_hyp_status['load']['vm_vcpus_total']
+
+        #TODO IMPLEMENT IN HYPERVISOR FORMS AND POPULATE
+        self.hyp_info['reserved_memory_mb'] = 512
+        reserved_memory = self.hyp_info['reserved_memory_mb'] * 1024
+        total_memory = self.hyp_info['info']['memory_in_MB'] * 1024
+
+        d_values['free_mem_for_domains'] = dict_hyp_status['load']['free_ram_total'] - reserved_memory
+        d_values['rate_free_mem_for_domains'] = round(float(d_values['free_mem_for_domains'])/total_memory,3)
+        d_values['rate_vcpus_real-thread-cpus'] = round(dict_hyp_status['load']['vm_vcpus_total'] \
+                                                  / self.hyp_info['info']['cpu_threads'],2)
+
+        d_values['rate_ballon_disposable'] = round(dict_hyp_status['load']['vm_mem_with_ballon_total'] \
+                                                   / dict_hyp_status['load']['vm_mem_max_total'], 2)
+
+        for pool_id in self.pools:
+            pools_stats[pool_id].new_stats_hyp(self.id, d_values)
+
+        dict_hyp_status['values_for_weights'] = d_values
         insert_db_hyp_status(dict_hyp_status)
 
 
