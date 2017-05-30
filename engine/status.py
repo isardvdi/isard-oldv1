@@ -169,20 +169,28 @@ class UpdateStatus():
         else:
             d_values['cpu_idle'] = None
             d_values['cpu_iowait'] = None
+        if 'vm_vcpus_total' not in dict_hyp_status['load']:
+            tmppp=1
         d_values['vcpus'] = dict_hyp_status['load']['vm_vcpus_total']
 
         #TODO IMPLEMENT IN HYPERVISOR FORMS AND POPULATE
         self.hyp_info['reserved_memory_mb'] = 512
         reserved_memory = self.hyp_info['reserved_memory_mb'] * 1024
         total_memory = self.hyp_info['info']['memory_in_MB'] * 1024
+        total_threads_cpu = self.hyp_info['info']['cpu_threads']
+        d_values['total_memory'] = total_memory
+        d_values['total_threads_cpu'] = total_threads_cpu
 
+        d_values['total_domains'] = len(self.hyp_obj.domain_stats)
         d_values['free_mem_for_domains'] = dict_hyp_status['load']['free_ram_total'] - reserved_memory
         d_values['rate_free_mem_for_domains'] = round(float(d_values['free_mem_for_domains'])/total_memory,3)
-        d_values['rate_vcpus_real-thread-cpus'] = round(dict_hyp_status['load']['vm_vcpus_total'] \
-                                                  / self.hyp_info['info']['cpu_threads'],2)
-
-        d_values['rate_ballon_disposable'] = round(dict_hyp_status['load']['vm_mem_with_ballon_total'] \
-                                                   / dict_hyp_status['load']['vm_mem_max_total'], 2)
+        d_values['rate_vcpus_rcpus'] = round(dict_hyp_status['load']['vm_vcpus_total'] \
+                                                  / total_threads_cpu,2)
+        if dict_hyp_status['load']['vm_mem_max_total'] > 0:
+            d_values['rate_ballon_disposable'] = round(dict_hyp_status['load']['vm_mem_with_ballon_total'] \
+                                                       / dict_hyp_status['load']['vm_mem_max_total'], 2)
+        else:
+            d_values['rate_ballon_disposable'] = 1
 
         for pool_id in self.pools:
             pools_stats[pool_id].new_stats_hyp(self.id, d_values)

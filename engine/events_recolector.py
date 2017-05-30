@@ -28,6 +28,7 @@ from .db import get_hyp_hostname_user_port_from_id, update_uri_hyp, get_domain_s
 from .db import get_domain
 from .vm import xml_vm
 
+
 def virEventLoopNativeRun():
     while True:
         libvirt.virEventRunDefaultImpl()
@@ -274,11 +275,16 @@ def myDomainEventCallbackRethink (conn, dom, event, detail, opaque):
         if 'status' in d_status_hyp_started.keys():
             if d_status_hyp_started['status'] != domEventToString(event) \
                 and domEventToString(event) in ['Started','Stopped','Paused']:
-                update_domain_status(id_domain = dom.name(),
+                domain_id = dom.name()
+                update_domain_status(id_domain = domain_id,
                                  status    = domEventToString(event),
                                  hyp_id    = hyp_id,
                                  detail    = domDetailToString(event, detail)
                                  )
+                if domEventToString(event) == 'Started':
+                    r_status.pools_stats.update_domain_in_hyp_as_started(hyp_id,domain_id)
+                if domEventToString(event) == 'Stopped':
+                    r_status.pools_stats.update_domain_in_hyp_as_stopped(hyp_id,domain_id)
         else:
             log.error('UNKNOWN STATUS in domain {}'.format(dict_event['domain']))
     else:
@@ -354,9 +360,12 @@ def myDomainEventGraphicsCallbackRethink(conn, dom, phase, localAddr, remoteAddr
 
 r_status = RethinkHypEvent()
 
+
+
 class ThreadHypEvents(threading.Thread):
     def __init__(self,name,
                  dict_hyps,
+                 pools_stats,
                  register_graphics_events = True
                  ):
         threading.Thread.__init__(self)
@@ -367,6 +376,7 @@ class ThreadHypEvents(threading.Thread):
         # self.hostname = get_hyp_hostname_from_id(hyp_id)
         self.hyps_conn = dict()
         self.events_ids = dict()
+        self.pools_stats = pools_stats
 
     def run(self):
         # Close connection on exit (to test cleanup paths)
@@ -441,6 +451,7 @@ class ThreadHypEvents(threading.Thread):
 
         # r_status = self.r_status
         global r_status
+        r_status.pools_stats = self.pools_stats
         cb_ids={}
 
 
@@ -478,11 +489,11 @@ class ThreadHypEvents(threading.Thread):
 
 
 
-def launch_thread_hyps_event(dict_hyps):
+def launch_thread_hyps_event(dict_hyps,pools_stats):
 
     # t = threading.Thread(name= 'events',target=events_from_hyps, args=[list_hostnames])
 
-    t = ThreadHypEvents(name='hyps_events',dict_hyps=dict_hyps)
+    t = ThreadHypEvents(name='hyps_events',dict_hyps=dict_hyps,pools_stats=pools_stats)
     t.daemon = True
     t.start()
     return t

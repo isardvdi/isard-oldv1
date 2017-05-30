@@ -20,6 +20,7 @@ from os.path import dirname as extract_dir_path
 from time import sleep
 import threading
 # from pool_hypervisors import update_online_hypervisors
+from .pool_hypervisors import pools_stats
 from .db import get_hyp_hostnames_online,update_domain_hyp_started, update_all_domains_status, update_table_field
 from .db import update_hypervisor_failed_connection, update_hyp_status, set_unknown_domains_not_in_hyps
 from .db import update_domain_status, get_domains_started_in_hyp, get_hyp_hostname_from_id, update_domains_started_in_hyp_to_unknown
@@ -443,6 +444,7 @@ class HypWorkerThread(threading.Thread):
                 ## START DOMAIN
                 elif action['type'] == 'start_domain':
                     log.debug('xml to start some lines...: {}'.format(action['xml'][30:100]))
+                    pools_stats.update_domain_in_hyp_as_stopped(self.hyp_id, action['id_domain'])
                     try:
                         self.h.conn.createXML(action['xml'])
                         update_domain_status('Started',action['id_domain'],hyp_id=self.hyp_id,detail='')

@@ -11,7 +11,7 @@ import time
 import pprint
 from datetime import datetime
 
-from .pool_hypervisors import PoolHypervisors
+from .pool_hypervisors import PoolHypervisors, pools_stats
 from .threads import launch_try_hyps, set_unknown_domains_not_in_hyps
 from .threads import set_domains_coherence, launch_thread_worker, launch_disk_operations_thread, launch_long_operations_thread
 from .events_recolector import launch_thread_hyps_event
@@ -118,7 +118,8 @@ class ManagerHypervisors(object):
                 set_unknown_domains_not_in_hyps(dict_hyps_ready.keys())
                 set_domains_coherence(dict_hyps_ready)
 
-                self.manager.t_events = launch_thread_hyps_event(dict_hyps_ready)
+                global pools_stats
+                self.manager.t_events = launch_thread_hyps_event(dict_hyps_ready,pools_stats)
 
                 for hyp_id, hostname in dict_hyps_ready.items():
                     update_hyp_status(hyp_id, 'StartingThreads')

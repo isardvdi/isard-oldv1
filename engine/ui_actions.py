@@ -26,6 +26,7 @@ from .vm import xml_vm, update_xml_from_dict_domain, populate_dict_hardware_from
 from .db import update_domain_status,get_hyp, create_disk_template_created_list_in_domain, remove_disk_template_created_list_in_domain
 from .db import get_hyp_hostnames_online,insert_ferrary,get_ferrary,delete_domain,update_domain_viewer_started_values
 from .functions import exec_remote_list_of_cmds,try_ssh, replace_path_disk
+from .pool_hypervisors import pools_stats
 
 
 class UiActions(object):
@@ -78,13 +79,14 @@ class UiActions(object):
         if 'viewer_passwd' in x.__dict__.keys():
             update_domain_viewer_started_values(id,passwd=x.viewer_passwd)
 
-        hyp=self.start_domain_from_xml(xml,id,pool_id=pool_id)
+        hyp=self.start_domain_from_xml(xml,id,pool_id=pool_id,dict_domain=dict_domain)
         return hyp
 
     def start_paused_domain_from_xml(self,xml,id_domain,pool_id):
         failed=False
+        dict_domain = get_domain(id_domain)
         if pool_id in self.manager.pools.keys():
-            next_hyp = self.manager.pools[pool_id].get_next()
+            next_hyp = self.manager.pools[pool_id].get_next(dict_domain=dict_domain)
             log.debug('//////////////////////')
             if next_hyp is not False:
                 log.debug('next_hyp={}'.format(next_hyp))
@@ -115,10 +117,10 @@ class UiActions(object):
             return next_hyp
 
 
-    def start_domain_from_xml(self,xml,id_domain,pool_id='default'):
+    def start_domain_from_xml(self,xml,id_domain,pool_id='default',dict_domain=None):
         failed=False
         if pool_id in self.manager.pools.keys():
-            next_hyp = self.manager.pools[pool_id].get_next()
+            next_hyp = self.manager.pools[pool_id].get_next(dict_domain=dict_domain,action='start')
             if next_hyp is not False:
                 update_domain_status(status='Starting',
                                      id_domain=id_domain,
@@ -267,7 +269,7 @@ class UiActions(object):
                     log.error('hypervisor pool {} nor running in manager, can\'t delete disks in domain {}'.format(pool_id,id_domain))
                     return False
 
-                next_hyp = self.manager.pools[pool_id].get_next()
+                next_hyp = self.manager.pools[pool_id].get_next(dict_domain=dict_domain, action='delete')
                 log.debug('hypervisor where delete disk {}: {}'.format(disk_path,next_hyp))
                 cmds = create_cmds_delete_disk(disk_path)
 

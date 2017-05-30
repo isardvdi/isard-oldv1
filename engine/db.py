@@ -1333,6 +1333,7 @@ def update_table_field(table, id_doc, field, value, merge_dict=True):
 class RethinkHypEvent(object):
 
     def __init__(self):
+        self.pools_stats = None
         pass
 
     def insert_event_in_db(self,dict_event):

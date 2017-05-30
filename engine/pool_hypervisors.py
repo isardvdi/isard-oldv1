@@ -12,6 +12,7 @@ from .hyp import hyp
 from .log import *
 from .db import get_hyp_hostnames, update_hyp_status, update_db_hyp_info
 # from ui_actions import UiActions
+from .db import get_domain
 from .db import get_hyp_hostnames_online, initialize_db_status_hyps
 #from threads import launch_threads_status_hyp, launch_thread_worker, launch_disk_operations_thread
 #from threads import dict_threads_active
@@ -34,7 +35,7 @@ class PoolHypervisors():
 
 
         self.last_index=0
-    def get_next(self,to_create_disk=False, path_selected=''):
+    def get_next(self,to_create_disk=False, path_selected='', dict_domain=None, action='start'):
         # NEXT RELEASES WE WILL WORK HERE
         # INFO TO DEVELOPER, SI se crea un disco podemos decidir algo distinto... en la decision de pools...
         self.hyps = get_hypers_in_pool(self.id_pool)
@@ -48,7 +49,12 @@ class PoolHypervisors():
                     self.last_index = 0
                 else:
                     self.last_index += 1
-                return self.hyps[self.last_index]
+                hyp_selected = self.hyps[self.last_index]
+                if action == 'start':
+                    pools_stats.update_domain_in_hyp_as_started(hyp_selected, dict_domain['id'], dict_domain)
+                elif action == 'stop':
+                    pools_stats.update_domain_in_hyp_as_stopped(hyp_selected, dict_domain['id'], dict_domain)
+                return hyp_selected
             elif to_create_disk is True and len(path_selected) > 0:
                 pass
 
@@ -119,6 +125,42 @@ class hyp_parameters(object):
                 self.parameters[parameter]['min_value'] = None
                 self.parameters[parameter]['average_value'] = None
 
+                #examples with numpy
+                # x = np.random.rand(1000) * 10
+                # a = np.asarray(x)
+                # #lower than 1 convert to
+                # low = a < 1
+                # a[low] = 1
+                #
+                #
+                # #high values > 5 =>  10
+                # high = a > 5
+                # a[high] = a[high] * 2
+
+    def update_domain_as_started(self,domain_id,domain_dict = None):
+        if domain_dict is None:
+            domain_dict = get_domain(domain_id)
+        if domain_dict is not None:
+            self.parameters['free_mem_for_domains']['values'][-1] -= domain_dict['hardware']['currentMemory']
+            self.parameters['total_domains']['values'][-1] += 1
+            self.parameters['vcpus']['values'][-1] += domain_dict['hardware']['vcpus']
+            self.parameters['rate_vcpus_rcpus']['values'][-1] = self.parameters['vcpus']['values'][-1] / self.parameters['total_threads_cpu']['values'][-1]
+            self.parameters['rate_free_mem_for_domains']['values'][-1] = self.parameters['free_mem_for_domains']['values'][-1] / self.parameters['total_memory']['values'][-1]
+
+            self.update_stats()
+
+    def update_domain_as_stopped(self,domain_id,domain_dict = None):
+        if domain_dict is None:
+            domain_dict = get_domain(domain_id)
+        if domain_dict is not None:
+            self.parameters['free_mem_for_domains']['values'][-1] += domain_dict['hardware']['currentMemory']
+            self.parameters['total_domains']['values'][-1] -= 1
+            self.parameters['vcpus']['values'][-1] -= domain_dict['hardware']['vcpus']
+            self.parameters['rate_vcpus_rcpus']['values'][-1] = self.parameters['vcpus']['values'][-1] / self.parameters['total_threads_cpu']['values'][-1]
+            self.parameters['rate_free_mem_for_domains']['values'][-1] = self.parameters['free_mem_for_domains']['values'][-1] / self.parameters['total_memory']['values'][-1]
+
+            self.update_stats()
+
     def purgue_values(self):
 
             # remove_items_from = 0
@@ -149,15 +191,33 @@ class HypStats(object):
             'cpu_idle':{},
             'cpu_iowait':{},
             'vcpus':{},
+            'total_memory':{},
+            'total_threads_cpu':{},
+            'total_domains':{},
             'free_mem_for_domains': {},
             'rate_free_mem_for_domains': {},
-            'rate_vcpus_real-thread-cpus': {},
+            'rate_vcpus_rcpus': {},
             'rate_ballon_disposable': {}
         }
         self.hyp_stats = {}
         self.pool_weights = weights
         self.average_time = 60
 
+    def update_domain_in_hyp_as_started(self,id_hyp,domain_id,domain_dict=None):
+        if id_hyp in self.hyp_stats.keys():
+            self.lock.acquire()
+            self.hyp_stats[id_hyp].update_domain_as_started(domain_id,domain_dict)
+            self.lock.release()
+        else:
+            log.error('Hypervisor {} try to insert stats in stats from hyp and not exist in hyp_stats dictionary'.format(id_hyp))
+
+    def update_domain_in_hyp_as_stopped(self,id_hyp,domain_id,domain_dict=None):
+        if id_hyp in self.hyp_stats.keys():
+            self.lock.acquire()
+            self.hyp_stats[id_hyp].update_domain_as_stopped(domain_id,domain_dict)
+            self.lock.release()
+        else:
+            log.error('Hypervisor {} try to insert stats in stats from hyp and not exist in hyp_stats dictionary'.format(id_hyp))
 
     def new_stats_hyp(self,id_hyp, d_values):
         if id_hyp in self.hyp_stats.keys():

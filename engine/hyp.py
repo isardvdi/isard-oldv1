@@ -366,6 +366,11 @@ class hyp(object):
             self.load['ram_cached'] = l['cached']
             self.load['ram_free'] = l['free']
 
+            self.load['total_vm'] = 0
+            self.load['vm_mem_max_total'] = 0
+            self.load['vm_mem_with_ballon_total'] = 0
+            self.load['vm_vcpus_total'] = 0
+
             self.load['free_ram_total'] = l['cached'] + l['free']
             self.load['percent_free'] = round(float(self.load['free_ram_total'])*100/l['total'],2)
 
@@ -382,6 +387,7 @@ class hyp(object):
                 vm_mem_max_total = 0
                 vm_mem_with_ballon_total = 0
                 vm_vcpus_total = 0
+
 
                 for r in l_stats:
                     try:
