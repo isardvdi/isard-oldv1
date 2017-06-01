@@ -26,7 +26,7 @@ from .db import update_hypervisor_failed_connection, update_hyp_status, set_unkn
 from .db import update_domain_status, get_domains_started_in_hyp, get_hyp_hostname_from_id, update_domains_started_in_hyp_to_unknown
 from .functions import dict_domain_libvirt_state_to_isard_state, state_and_cause_to_str,execute_commands, execute_command_with_progress,get_tid
 from .qcow import extract_list_backing_chain,create_cmds_disk_template_from_domain, verify_output_cmds1_template_from_domain,verify_output_cmds2,verify_output_cmds3
-from .db import update_db_hyp_info, update_disk_template_created, update_disk_backing_chain
+from .db import update_db_hyp_info, update_disk_template_created, update_disk_backing_chain, get_pools_from_hyp
 from .vm import create_template_from_dict
 
 import pprint
@@ -444,7 +444,8 @@ class HypWorkerThread(threading.Thread):
                 ## START DOMAIN
                 elif action['type'] == 'start_domain':
                     log.debug('xml to start some lines...: {}'.format(action['xml'][30:100]))
-                    pools_stats.update_domain_in_hyp_as_stopped(self.hyp_id, action['id_domain'])
+                    for pool_id in get_pools_from_hyp(hyp_id):
+                        pools_stats[pool_id].update_domain_in_hyp_as_stopped(self.hyp_id, action['id_domain'])
                     try:
                         self.h.conn.createXML(action['xml'])
                         update_domain_status('Started',action['id_domain'],hyp_id=self.hyp_id,detail='')

@@ -86,7 +86,7 @@ class UiActions(object):
         failed=False
         dict_domain = get_domain(id_domain)
         if pool_id in self.manager.pools.keys():
-            next_hyp = self.manager.pools[pool_id].get_next(dict_domain=dict_domain)
+            next_hyp,reason = self.manager.pools[pool_id].get_next(dict_domain=dict_domain)
             log.debug('//////////////////////')
             if next_hyp is not False:
                 log.debug('next_hyp={}'.format(next_hyp))
@@ -120,7 +120,7 @@ class UiActions(object):
     def start_domain_from_xml(self,xml,id_domain,pool_id='default',dict_domain=None):
         failed=False
         if pool_id in self.manager.pools.keys():
-            next_hyp = self.manager.pools[pool_id].get_next(dict_domain=dict_domain,action='start')
+            next_hyp,reason = self.manager.pools[pool_id].get_next(dict_domain=dict_domain,action='start')
             if next_hyp is not False:
                 update_domain_status(status='Starting',
                                      id_domain=id_domain,

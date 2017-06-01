@@ -327,8 +327,6 @@ def update_domain_progress(id_domain,percent):
     close_rethink_connection(r_conn)
     return results
 
-
-
 def update_domain_status(status,id_domain,hyp_id=None,detail=''):
     r_conn = new_rethink_connection()
     rtable=r.table('domains')

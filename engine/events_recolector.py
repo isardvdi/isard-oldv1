@@ -25,7 +25,7 @@ from .log import *
 from .functions import hostname_to_uri, get_tid
 from .db import update_domain_status, get_id_hyp_from_uri, update_domain_viewer_started_values, insert_event_in_db, RethinkHypEvent, remove_domain_viewer_values
 from .db import get_hyp_hostname_user_port_from_id, update_uri_hyp, get_domain_status, get_domain_hyp_started_and_status_and_detail
-from .db import get_domain
+from .db import get_domain, get_pools_from_hyp
 from .vm import xml_vm
 
 
@@ -282,9 +282,11 @@ def myDomainEventCallbackRethink (conn, dom, event, detail, opaque):
                                  detail    = domDetailToString(event, detail)
                                  )
                 if domEventToString(event) == 'Started':
-                    r_status.pools_stats.update_domain_in_hyp_as_started(hyp_id,domain_id)
+                    for pool_id in get_pools_from_hyp(hyp_id):
+                        r_status.pools_stats[pool_id].update_domain_in_hyp_as_started(hyp_id,domain_id)
                 if domEventToString(event) == 'Stopped':
-                    r_status.pools_stats.update_domain_in_hyp_as_stopped(hyp_id,domain_id)
+                    for pool_id in get_pools_from_hyp(hyp_id):
+                        r_status.pools_stats[pool_id].update_domain_in_hyp_as_stopped(hyp_id,domain_id)
         else:
             log.error('UNKNOWN STATUS in domain {}'.format(dict_event['domain']))
     else:

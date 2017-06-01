@@ -7,6 +7,7 @@
 
 
 from time import time, sleep
+from random import random
 import threading
 import traceback
 
@@ -162,18 +163,19 @@ class UpdateStatus():
             dict_hyp_status['when'] = now
 
         d_values = {}
-        d_values['cpu_freq'] = self.hyp_info['info']['cpu_mhz']
+        #cpu_freq in GHz
+        d_values['cpu_freq'] = round(self.hyp_info['info']['cpu_mhz'] / 1000.0 , 2)
+        d_values['random'] = random()
         if dict_hyp_status['cpu_percent'] is not False:
             d_values['cpu_idle'] = dict_hyp_status['cpu_percent']['idle']
             d_values['cpu_iowait'] = dict_hyp_status['cpu_percent']['iowait']
         else:
             d_values['cpu_idle'] = None
             d_values['cpu_iowait'] = None
-        if 'vm_vcpus_total' not in dict_hyp_status['load']:
-            tmppp=1
+
         d_values['vcpus'] = dict_hyp_status['load']['vm_vcpus_total']
 
-        #TODO IMPLEMENT IN HYPERVISOR FORMS AND POPULATE
+        #TODO IMPLEMENT HOW MANY RESERVED MEMORY MUST BE IN HYPERVISOR FORMS AND POPULATE
         self.hyp_info['reserved_memory_mb'] = 512
         reserved_memory = self.hyp_info['reserved_memory_mb'] * 1024
         total_memory = self.hyp_info['info']['memory_in_MB'] * 1024
@@ -192,6 +194,11 @@ class UpdateStatus():
         else:
             d_values['rate_ballon_disposable'] = 1
 
+        #NORMALIZE VALUES
+        d_values['free_mem_for_domains'] = round(d_values['free_mem_for_domains'] / (1024.0 * 1024.0), 1)
+        d_values['total_memory'] = round(d_values['total_memory'] / (1024.0 * 1024.0), 1)
+
+        # IF hypervisor in more than one pool
         for pool_id in self.pools:
             pools_stats[pool_id].new_stats_hyp(self.id, d_values)
 
