@@ -759,6 +759,33 @@ class Populate(object):
                                             }], conflict='update').run(db.conn))
             return True
 
+
+    '''
+    WEIGHTS_PROFILES
+    '''
+
+    '''
+    WEIGHTS_CONFIG
+    '''
+    def weights_config(self,disk_operations=['localhost']):
+        with app.app_context():
+            if not r.table_list().contains('weights_config').run(db.conn):
+                log.info("Table hypervisors_pools_cfg not found, creating...")
+                r.table_create('hypervisors_pools_cfg', primary_key="id").run(db.conn)
+
+                rpools = r.table('hypervisors_pools_cfg')
+
+                self.result(rpools.delete().run(db.conn))
+                log.info("Table hypervisors_pools_cfg found, populating...")
+                self.result(rpools.insert([{'id': 'parameter',
+                                            'name': 'parameter',
+                                            'description':'',
+                                            'lower_value':0,
+                                            'upper_value':5,    
+                                            'lower_limit':2,
+                                            'upper_limit':3
+                                                }], conflict='update').run(db.conn))
+            return True
     '''
     HYPERVISORS_EVENTS
     '''
