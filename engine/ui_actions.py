@@ -150,41 +150,58 @@ class UiActions(object):
         pass
 
 
-    def stop_domain_from_id(self,id):
-        # INFO TO DEVELOPER. puede pasar que alguna actualización en algún otro hilo del status haga que
-        # durante un corto período de tiempo devuelva None,para evitarlo durante un segundo vamos a ir pidiendo cada
-        # 100 ms que nos de el hypervisor
-        time_wait = 0.0
-        while time_wait <= 20.0:
+    # def stop_domain_from_id(self,id):
+    #     # INFO TO DEVELOPER. puede pasar que alguna actualización en algún otro hilo del status haga que
+    #     # durante un corto período de tiempo devuelva None,para evitarlo durante un segundo vamos a ir pidiendo cada
+    #     # 100 ms que nos de el hypervisor
+    #     time_wait = 0.0
+    #     while time_wait <= 20.0:
+    #
+    #         hyp_id = get_domain_hyp_started(id)
+    #         if hyp_id is not None:
+    #             if len(hyp_id) > 0:
+    #                 break
+    #         else:
+    #             time_wait = time_wait + 0.1
+    #             sleep(0.1)
+    #             log.debug('waiting {} seconds to find hypervisor started for domain {}'.format(time_wait,id))
+    #     log.debug('stop domain id {} in {}'.format(id,hyp_id))
+    #     # hyp_id = get_domain_hyp_started(id)
+    #     # log.debug('stop domain id {} in {}'.format(id,hyp_id))
+    #     if hyp_id is None:
+    #         hyp_id = ''
+    #     if len(hyp_id) <= 0:
+    #         log.debug('hypervisor where domain {} is started not finded'.format(id))
+    #         update_domain_status(status='Unknown',
+    #                  id_domain=id_domain,
+    #                  hyp_id=None,
+    #                  detail='hypervisor where domain {} is started not finded'.format(id))
+    #     else:
+    #         self.stop_domain(id,hyp_id)
 
-            hyp_id = get_domain_hyp_started(id)
-            if hyp_id is not None:
-                if len(hyp_id) > 0:
-                    break
-            else:
-                time_wait = time_wait + 0.1
-                sleep(0.1)
-                log.debug('waiting {} seconds to find hypervisor started for domain {}'.format(time_wait,id))
-        log.debug('stop domain id {} in {}'.format(id,hyp_id))
-        # hyp_id = get_domain_hyp_started(id)
-        # log.debug('stop domain id {} in {}'.format(id,hyp_id))
-        if hyp_id is None:
-            hyp_id = ''
-        if len(hyp_id) <= 0:
-            log.debug('hypervisor where domain {} is started not finded'.format(id))
-            update_domain_status(status='Unknown',
-                     id_domain=id_domain,
-                     hyp_id=None,
-                     detail='hypervisor where domain {} is started not finded'.format(id))
-        else:
-            self.stop_domain(id,hyp_id)
 
+    def stop_domain(self,id_domain):
+        hyp_started = get_domain_hyp_started(id_domain)
+        hyp_id= hyp_started
 
-    def stop_domain(self,id_domain,hyp_id):
+        if hyp_started is None:
+            log.error('domain {} can not stop: without hypervisor??'.format(id_domain))
+            return False
+
+        if type(hyp_started) is str:
+            if len(hyp_started) == 0:
+                log.error('domain {} can not stop: without hypervisor??'.format(id_domain))
+                return False
+
+        if hyp_started not in self.manager.q.workers.keys():
+            log.error('domain {}  can not stop: hypervisor {} is not in workers queues'.format(id_domain,hyp_started))
+            return False
+
         update_domain_status(status='Stopping',
                      id_domain=id_domain,
                      hyp_id=hyp_id,
                      detail='desktop stopping in hyp {}'.format(hyp_id))
+
         self.manager.q.workers[hyp_id].put({'type':'stop_domain','id_domain':id_domain})
         return True
 
@@ -759,15 +776,13 @@ class UiActions(object):
         ids = [f['id'] for f in ferrary]
         for id in ids:
             hyp = self.start_domain_from_id(id)
-            update_domain_hyp_started(id,hyp)
 
 
     def stop_ferrary(self,ferrary):
         ids = [f['id'] for f in ferrary]
         for id in ids:
-            hyp_id = get_domain_hyp_started(id)
-            self.stop_domain(id,hyp_id)
-            update_domain_hyp_stopped(id)
+
+            self.stop_domain(id)
 
     def delete_ferrary(self,ferrary):
         cmds = ['rm -f ' + f['dict_domain']['hardware']['disks'][0]['file'] for f in ferrary]

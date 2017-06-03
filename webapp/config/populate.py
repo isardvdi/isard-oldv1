@@ -44,6 +44,10 @@ class Populate(object):
         log.info('Checking table hypervisors and pools')
         self.hypervisors()
         log.info('Checking table interfaces')
+        self.weights_config()
+        log.info('Checking table weights config')
+        self.weights_profiles()
+        log.info('Checking table weights profiles')
         self.interfaces()
         log.info('Checking table graphics')
         self.graphics()
@@ -714,6 +718,7 @@ class Populate(object):
                 self.result(rpools.insert([{'id': 'default',
                                             'name': 'Default',
                                             'description': 'Non encrypted (not recommended)',
+                                            'weight_profile_id': 'balanced_cpu',
                                             'paths': {'bases':
                                                           [{'path':'/isard/bases',
                                                                'disk_operations': disk_operations, 'weight': 100}],
@@ -741,6 +746,202 @@ class Populate(object):
                                                           'users': []}
                                             }], conflict='update').run(db.conn))
             return True
+
+    '''
+    WEIGHTS_PROFILES
+    '''
+    def weights_profiles(self):
+        with app.app_context():
+            if not r.table_list().contains('weights_profiles').run(db.conn):
+                log.info("Table weights_profiles not found, creating...")
+                r.table_create('weights_profiles', primary_key="id").run(db.conn)
+
+                rweights_profiles = r.table('weights_profiles')
+
+                # self.result(rweights_config.delete().run(db.conn))
+                log.info("Table weights_config found, populating...")
+                self.result(rweights_profiles.insert([
+                     {'id'    : 'rate_vcpus_rcpus_only',
+                      'name'  : 'rate_vcpus_rcpus_only',
+                      'description': '',
+                     'weights': {'vcpus_rcpus':{'parameter':'rate_vcpus_rcpus',
+                                                'weight':100,
+                                                'type':'current'}
+                                }
+                     },
+                     {'id'    : 'random_only',
+                      'name'  : 'random_only',
+                      'description': '',
+                     'weights': {'randomize'   : {'parameter': 'random',
+                                                  'weight'   : 100,
+                                                  'type'     : 'current'}
+                                 }
+                     },
+                     {'id'    : 'balanced_cpu',
+                      'name'  : 'balanced cpu',
+                      'description': '',
+                      'weights': {'vcpus_rcpus': {'parameter': 'rate_vcpus_rcpus',
+                                                  'weight'   : 40,
+                                                  'type'     : 'current'},
+                                 'randomize': {'parameter': 'random',
+                                                'weight'   : 10,
+                                                'type'     : 'current'},
+                                 'avg_cpu_idle': {'parameter': 'cpu_idle',
+                                                  'weight'   : 50,
+                                                  'type'     : 'average'}
+                                  }
+                      }
+                ], conflict='update').run(db.conn))
+            return True
+
+                # TYPES
+                # 'average'
+                # 'current'
+                # 'max'
+                # 'min'
+                # 'values'
+
+                # PARAMETERS
+                # 'cpu_freq'
+                # 'cpu_idle'
+                # 'cpu_iowait'
+                # 'random'
+                # 'vcpus'
+                # 'total_memory'
+                # 'total_threads_cpu'
+                # 'total_domains'
+                # 'free_mem_for_domains'
+                # 'rate_free_mem_for_domains'
+                # 'rate_vcpus_rcpus'
+                # 'rate_ballon_disposable'
+
+    '''
+    WEIGHTS_CONFIG
+    '''
+    def weights_config(self):
+        with app.app_context():
+            if not r.table_list().contains('weights_config').run(db.conn):
+                log.info("Table weights_config not found, creating...")
+                r.table_create('weights_config', primary_key="id").run(db.conn)
+
+                rweights_config = r.table('weights_config')
+
+                # self.result(rweights_config.delete().run(db.conn))
+                log.info("Table weights_config found, populating...")
+                self.result(rweights_config.insert([
+                                            {'id': 'cpu_freq',
+                                            'name': 'cpu_freq',
+                                            'description':'cpu frecuency of processor in GHz',
+                                            'normalized_lower_value':0.0,
+                                            'normalized_upper_value':1.0,
+                                            'threshold_lower_value':2.0,
+                                            'threshold_upper_value':5.0,
+                                            'invert':False
+                                                },
+                                            {'id'                    : 'cpu_idle',
+                                             'name'                  : 'cpu idle percent',
+                                             'description'           : '',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 20,
+                                             'threshold_upper_value' : 95,
+                                             'invert'                : False
+                                             },
+                                            {'id'                    : 'cpu_iowait',
+                                             'name'                  : 'cpu iowait percent',
+                                             'description'           : '',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.05,
+                                             'threshold_upper_value' : 0.5,
+                                             'invert'                : True
+                                             },
+                                            {'id'                    : 'random',
+                                             'name'                  : 'random value',
+                                             'description'           : 'random value to balance decision',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 1.0,
+                                             'invert'                : False
+                                             },
+                                            {'id'                    : 'vcpus',
+                                             'name'                  : 'virtual cpus running',
+                                             'description'           : 'virtual cpus running in domains',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 100.0,
+                                             'invert'                : True
+                                             },
+                                            {'id'                    : 'total_memory',
+                                             'name'                  : 'memory installed',
+                                             'description'           : 'memory installed in hypervisor',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 8.0,
+                                             'threshold_upper_value' : 512.0,
+                                             'invert'                : False
+                                             },
+                                            {'id'                    : 'total_threads_cpu',
+                                             'name'                  : 'cpu threads installed',
+                                             'description'           : 'total cpu threads in installed processors',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 8.0,
+                                             'threshold_upper_value' : 512.0,
+                                             'invert'                : True
+                                             },
+                                            {'id'                    : 'total_domains',
+                                             'name'                  : 'domains running',
+                                             'description'           : 'total domains running in hypervisor',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 100.0,
+                                             'invert'                : True
+                                             },
+                                            {'id'                    : 'free_mem_for_domains',
+                                             'name'                  : 'free memory for domains',
+                                             'description'           : 'memory reserved to run domains in hypervisor',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 100.0,
+                                             'invert'                : False
+                                             },
+                                            {'id'                    : 'rate_free_mem_for_domains',
+                                             'name'                  : 'rate free memory for domains',
+                                             'description'           : 'memory reserved to run domains in hypervisor',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 1.0,
+                                             'invert'                : False
+                                             },
+                                            {'id'                    : 'rate_vcpus_rcpus',
+                                             'name'                  : 'rate virtual cpus to cpu threads',
+                                             'description'           : 'virtual cpus / real cpu threads',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.0,
+                                             'threshold_upper_value' : 10.0,
+                                             'invert'                : True
+                                             },
+                                            {'id'                    : 'rate_ballon_disposable',
+                                             'name'                  : 'rate current memory used to maximum memory for domains',
+                                             'description'           : 'balloon memory / maximum resreved memory for domains',
+                                             'normalized_lower_value': 0.0,
+                                             'normalized_upper_value': 1.0,
+                                             'threshold_lower_value' : 0.5,
+                                             'threshold_upper_value' : 1,
+                                             'invert'                : False
+                                             }
+
+                                           ], conflict='update').run(db.conn))
+            return True
+
+
 
     '''
     HYPERVISORS_EVENTS

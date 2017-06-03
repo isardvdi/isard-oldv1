@@ -261,6 +261,17 @@ def update_hyp_capability(hyp_id, capability, enable=True):
     close_rethink_connection(r_conn)
     return out
 
+def update_pool_weight_profile(pool_id, weight_profile_id='random_only'):
+    r_conn = new_rethink_connection()
+    rtable=r.table('hypervisors_pools')
+
+    out = rtable.get(pool_id).\
+    update({'weight_profile_id': weight_profile_id}).\
+    run(r_conn)
+
+    close_rethink_connection(r_conn)
+    return out
+
 def update_uri_hyp(hyp_id,uri):
     r_conn = new_rethink_connection()
     rtable=r.table('hypervisors')
@@ -319,6 +330,120 @@ def delete_domain(id):
     close_rethink_connection(r_conn)
     return results
 
+def create_domain_from_template(id_template,name,id_user,try_run = False,
+                                force_path_dir_to_disk=None,
+                                force_vcpus = None,
+                                force_memory = None,
+                                force_hypervisor_pool = None,
+                                force_interface = None,
+                                force_boot_order = None,
+                                new_graphics = 'default',
+                                new_video = 'default'
+                                ):
+
+    if name.replace('_','').replace('-','').isalnum() is False:
+        log.error('id_template {} have spaces or characters not alpha-numeric, "_" or "-" '.format(name))
+        return False
+
+    r_conn = new_rethink_connection()
+
+    d_user = r.table('users').get(id_user).run(r_conn)
+    if d_user is None:
+        log.error('ERROR in db function create_domain_from_template: user {} does not exist in database'.format(id_user))
+        close_rethink_connection(r_conn)
+        return False
+    d_template = r.table('domains').get(id_template).run(r_conn)
+    if d_template is None:
+        log.error('ERROR in db function create_domain_from_template: template {} does not exist in database'.format(id_template))
+        close_rethink_connection(r_conn)
+        return False
+    if d_template['kind'] not in ('base', 'public_template', 'user_template'):
+        log.error('ERROR in db function create_domain_from_template: template {} kind field are desktop'.format(id_template))
+        close_rethink_connection(r_conn)
+        return False
+
+    if type(force_path_dir_to_disk) is str:
+        if force_path_dir_to_disk.replace('_', '').replace('-', '').replace('/', '').isalnum() is False:
+            log.error('force_path_dir_to_disk {} have spaces or characters not alpha-numeric, "_" or "-" '.format(force_path_dir_to_disk))
+            return False
+        if force_path_dir_to_disk[0] == '/':
+            log.error('force_path_dir_to_disk {} must be relative'.format(force_path_dir_to_disk))
+            return False
+        new_path_dir_to_disk = force_path_dir_to_disk
+    else:
+        new_path_dir_to_disk = d_user['category'] + '/' + d_user['group'] + '/' + id_user
+
+    if type(force_hypervisor_pool) is str:
+        new_hypervisor_pool = force_hypervisor_pool
+    else:
+        new_hypervisor_pool = d_template['hypervisors_pools'][0]
+
+    if type(force_interface) is str:
+        new_id_interface = force_interface
+    else:
+        new_id_interface = d_template['hardware']['interfaces'][0]['id']
+
+    if type(force_vcpus) is int:
+        new_vcpus = force_vcpus
+    else:
+        new_vcpus = d_template['hardware']['vcpus']
+
+    if type(force_memory) is int:
+        new_memory = force_memory
+    else:
+        new_memory = d_template['hardware']['memory']
+
+    if type(force_boot_order) is list:
+        new_boot_order = force_boot_order
+    else:
+        new_boot_order = d_template['hardware']['boot_order']
+
+    new_category = d_user['category']
+    new_group = d_user['group']
+    new_file_path = new_path_dir_to_disk + '/' + name + '.qcow2'
+    new_parent = d_template['hardware']['disks'][0]['file']
+    new_id = '_' + id_user + '_' + name
+    new_icon = d_template['icon']
+    new_os = d_template['os']
+
+    d_new = \
+    {'allowed'          : {'categories': False,
+                           'groups'    : False,
+                           'roles'     : False,
+                           'users'     : False},
+     'category'         : new_category,
+     'create_dict'      : {'hardware': {'boot_order': new_boot_order,
+                                        'disks'     : [{'file'  : new_file_path,
+                                                        'parent': new_parent}],
+                                        'graphics'  : [new_graphics],
+                                        'interfaces': [new_id_interface],
+                                        'memory'    : new_memory,
+                                        'vcpus'     : str(new_vcpus),
+                                        'videos'    : [new_video]},
+                           'origin'  : id_template},
+     'description'      : '',
+     'detail'           : None,
+     'group'            : new_group,
+     'hypervisors_pools': [new_hypervisor_pool],
+     'icon'             : new_icon,
+     'id'               : new_id,
+     'kind'             : 'desktop',
+     'name'             : name,
+     'os'               : new_os,
+     'server'           : False,
+     'status'           : 'Creating',
+     'user'             : id_user,
+     'xml'              : None}
+
+    if try_run is False:
+        rtable = r.table('domains')
+        results = rtable.insert(d_new).run(r_conn)
+        close_rethink_connection(r_conn)
+        return results
+    else:
+        return d_new
+
+
 def update_domain_progress(id_domain,percent):
     r_conn = new_rethink_connection()
     rtable=r.table('domains')
@@ -340,7 +465,7 @@ def update_domain_status(status,id_domain,hyp_id=None,detail=''):
         #print('ojojojo')
         results = rtable.get_all(id_domain, index='id').update({
                                                       'status':status,
-                                                      'hyp_started': '',
+                                                      # 'hyp_started': '',
                                                       'detail':json.dumps(detail)}).run(r_conn)
     else:
         results = rtable.get_all(id_domain, index='id').update({'hyp_started':hyp_id,
@@ -1086,6 +1211,48 @@ def insert_hyp(id,
           run(r_conn)
     close_rethink_connection(r_conn)
 
+def get_weight_profile_for_pool(id_pool):
+    r_conn = new_rethink_connection()
+
+    rtable = r.table('hypervisors_pools')
+    d = rtable.get(id_pool).pluck('weight_profile_id').run(r_conn)
+    weight_profile_id=d['weight_profile_id']
+
+    rtable = r.table('weights_profiles')
+
+    w = rtable.get(weight_profile_id).run(r_conn)
+
+    close_rethink_connection(r_conn)
+    return w['weights']
+
+def get_weights_profiles():
+    r_conn = new_rethink_connection()
+    rtable=r.table('weights_profiles')
+
+    l = list(rtable.run(r_conn))
+    d = {i['id']:i for i in l}
+
+    close_rethink_connection(r_conn)
+    return d
+
+def get_weights_profiles_ids():
+    r_conn = new_rethink_connection()
+    rtable=r.table('weights_profiles')
+
+    l = list(rtable.pluck('id').run(r_conn))
+
+    close_rethink_connection(r_conn)
+    return l
+
+def get_weights_config():
+    r_conn = new_rethink_connection()
+    rtable=r.table('weights_config')
+
+    l = list(rtable.run(r_conn))
+    d_parameters = {i['id']:i for i in l}
+
+    close_rethink_connection(r_conn)
+    return d_parameters
 
 def get_pools_from_hyp(hyp_id):
     r_conn = new_rethink_connection()

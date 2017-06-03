@@ -13,12 +13,13 @@ from .hyp import hyp
 from .log import *
 from .db import get_hyp_hostnames, update_hyp_status, update_db_hyp_info
 # from ui_actions import UiActions
-from .db import get_domain
+from .db import get_domain, get_weights_config, get_weight_profile_for_pool
+from .db import get_hypers_in_pool
 from .db import get_hyp_hostnames_online, initialize_db_status_hyps
 #from threads import launch_threads_status_hyp, launch_thread_worker, launch_disk_operations_thread
 #from threads import dict_threads_active
 from .events_recolector import launch_thread_hyps_event
-from .functions import try_ssh
+from .functions import normalize_parameter
 
 
 import threading
@@ -155,7 +156,7 @@ class hyp_parameters(object):
 
 
 class HypStats(object):
-    def __init__(self,id_pool,weights):
+    def __init__(self,id_pool,d_weights_config):
         self.id_pool = id_pool
         self.lock = threading.Lock()
         self.config_parameters = {
@@ -173,8 +174,9 @@ class HypStats(object):
             'rate_ballon_disposable': {}
         }
         self.hyp_stats = {}
-        self.pool_weights = weights
+        # self.pool_weights = weights
         self.average_time = 60
+        self.d_weights_config = d_weights_config
 
     def get_hyps_with_free_mem(self,domain_memory):
         domain_memory = domain_memory / (1024*1024.0)
@@ -227,6 +229,7 @@ class HypStats(object):
         d_scores = dict()
         score_selected = None
         hyp_selected = None
+        self.pool_weights = get_weight_profile_for_pool(self.id_pool )
 
         for hyp_id in hyps_to_choose:
             d_scores[hyp_id] = dict()
@@ -234,20 +237,25 @@ class HypStats(object):
             d_scores[hyp_id]['selected'] = False
             d_scores[hyp_id]['by_parameters'] = dict()
 
+            pprint(self.hyp_stats[hyp_id].parameters)
 
             for key,d_weight in self.pool_weights.items():
 
                 parameter = d_weight['parameter']
-                d_scores[hyp_id]['by_parameters'][parameter] = dict()
+                d_scores[hyp_id]['by_parameters'][key] = dict()
                 type = d_weight['type']
                 weight = d_weight['weight']
                 value = self.hyp_stats[hyp_id].parameters[parameter][type]
-                score_parameter = value * weight
-                d_scores[hyp_id]['by_parameters'][parameter]['key'] = key
-                d_scores[hyp_id]['by_parameters'][parameter]['score'] = score_parameter
-                d_scores[hyp_id]['by_parameters'][parameter]['value'] = value
-                d_scores[hyp_id]['by_parameters'][parameter]['weight'] = weight
-                d_scores[hyp_id]['by_parameters'][parameter]['type'] = type
+
+                normalized = normalize_parameter(value,d_weights_config[parameter])
+                score_parameter = normalized * weight
+
+                d_scores[hyp_id]['by_parameters'][key]['parameter'] = key
+                d_scores[hyp_id]['by_parameters'][key]['score'] = score_parameter
+                d_scores[hyp_id]['by_parameters'][key]['value'] = value
+                d_scores[hyp_id]['by_parameters'][key]['normalized'] = normalized
+                d_scores[hyp_id]['by_parameters'][key]['weight'] = weight
+                d_scores[hyp_id]['by_parameters'][key]['type'] = type
                 d_scores[hyp_id]['score'] += score_parameter
 
             if score_selected is None:
@@ -272,30 +280,31 @@ class HypStats(object):
             self.lock.release()
 
 
-from engine.db import get_hypers_in_pool
 
 
-weights={'avg_cpu_idle':{'parameter':'cpu_idle',
-                          'weight':100,
-                          'type':'average'}
-          ,
-         'free_memory':{'parameter':'free_mem_for_domains',
-                          'weight':20,
-                          'type':'current'}
-          ,
-         'cpu_freq':   {'parameter':'cpu_freq',
-                          'weight':10,
-                          'type':'current'}
-          ,
-         'io_wait_peaks':   {'parameter':'cpu_iowait',
-                          'weight':-50,
-                          'type':'max'}
 
-          }
+# weights={'avg_cpu_idle':{'parameter':'cpu_idle',
+#                           'weight':100,
+#                           'type':'average'}
+#           ,
+#          'free_memory':{'parameter':'free_mem_for_domains',
+#                           'weight':20,
+#                           'type':'current'}
+#           ,
+#          'cpu_freq':   {'parameter':'cpu_freq',
+#                           'weight':10,
+#                           'type':'current'}
+#           ,
+#          'io_wait_peaks':   {'parameter':'cpu_iowait',
+#                           'weight':-50,
+#                           'type':'max'}
+#
+#           }
 
 
+d_weights_config = get_weights_config()
 pools_stats = dict()
-pools_stats['default'] = HypStats('default',weights)
+pools_stats['default'] = HypStats('default',d_weights_config)
 
 for hyp_id in get_hypers_in_pool('default'):
     pools_stats['default'].add_hyp(hyp_id)

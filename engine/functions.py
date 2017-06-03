@@ -1000,6 +1000,23 @@ def analize_check_os_output(array_out_err):
                 d = xmltodict.parse(d['out'])
                 print('DOMAIN ID: {}, SO product_name: {}'.format(id,d['operatingsystems']['operatingsystem']['product_name']))
 
+def normalize_parameter(input_value,d_weights_config):
+    i=float(input_value)
+    d=d_weights_config
+    if i <= d['threshold_lower_value']:
+        out = float(d['normalized_lower_value'])
+    elif i < d['threshold_upper_value']:
+        margin_out = float(d['normalized_upper_value'] - d['normalized_lower_value'])
+        margin_in = float(d['threshold_upper_value'] - d['threshold_lower_value'])
+        diff_in = i - d['threshold_lower_value']
+        if d['invert'] == True:
+            diff_in = margin_in - diff_in
+        out = diff_in * margin_out / margin_in
+    else:
+        out = float(d['normalized_upper_value'])
+
+    return round(out,2)
+
 
 def analize_backing_chains_outputs(array_out_err=[],path_to_write_json=None,path_to_read_json=None):
 

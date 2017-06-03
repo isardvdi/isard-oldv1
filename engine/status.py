@@ -194,7 +194,7 @@ class UpdateStatus():
         else:
             d_values['rate_ballon_disposable'] = 1
 
-        #NORMALIZE VALUES
+        #SCALE VALUES
         d_values['free_mem_for_domains'] = round(d_values['free_mem_for_domains'] / (1024.0 * 1024.0), 1)
         d_values['total_memory'] = round(d_values['total_memory'] / (1024.0 * 1024.0), 1)
 
@@ -251,7 +251,7 @@ class ThreadBroom(threading.Thread):
             list_domains = [d for d in l if 'hyp_started' in d.keys()]
             for d in list_domains_without_hyp:
                 log.error('DOMAIN {} WITH STATUS {} without HYPERVISOR'.format(d['id'],d['status']))
-                update_domain_status('Unknown', d['id'], detail='starting or stoping status witouth hypervisor')
+                update_domain_status('Unknown', d['id'], detail='starting or stopping status witouth hypervisor')
 
             hyps_to_try = set([d['hyp_started'] for d in list_domains])
             hyps_domain_started = {}
