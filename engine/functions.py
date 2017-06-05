@@ -5,6 +5,7 @@
 
 # coding=utf-8
 import threading
+from pprint import pprint
 import sys
 import libvirt
 from .log import *
