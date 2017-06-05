@@ -54,42 +54,42 @@ $(document).ready(function() {
             
                 $('.table_bases_add').on('click', function () {
                     $('#table_bases tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/bases)" type="text" style="width:95%"></th>\
-								<th><select name="disk_operations" class="hyper_list" placeholder="" style="width:95%"></select></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/bases)" type="text" style="width:95%" required></th>\
+								<th><select name="disk_operations" class="hyper_list" placeholder="" style="width:95%" required></select></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%" required></th>\
 								</tr>');
 
 					slider_weight();
                     hyper_list();
                 });
 
-                $('#table_templates_add').on('click', function () {
+                $('.table_templates_add').on('click', function () {
                     $('#table_templates tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/templates)" type="text" style="width:95%"></th>\
-								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/templates)" type="text" style="width:95%" required></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%" required></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%" required></th>\
 								</tr>');
 
 					slider_weight();
                     hyper_list();
                 });
 
-                $('#table_groups_add').on('click', function () {
+                $('.table_groups_add').on('click', function () {
                     $('#table_groups tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/groups)" type="text" style="width:95%"></th>\
-								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/groups)" type="text" style="width:95%" required></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%" required></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%" required></th>\
 								</tr>');
 
 					slider_weight();
                     hyper_list();
                 });
 
-                $('#table_isos_add').on('click', function () {
+                $('.table_isos_add').on('click', function () {
                     $('#table_isos tbody').append('<tr>\
-								<th><input name="path" placeholder="Absolute path (/isard/isos)" type="text" style="width:95%"></th>\
-								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%"></th>\
-								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%"></th>\
+								<th><input name="path" placeholder="Absolute path (/isard/isos)" type="text" style="width:95%" required></th>\
+								<th><input name="disk_operations" class="hyper_list" placeholder="" type="text" style="width:95%" required></th>\
+								<th><input name="weight" class="form-control col-md-7 col-xs-12 weight-slider" type="text" style="width:95%" required></th>\
 								</tr>');
 
 					slider_weight();
@@ -198,6 +198,42 @@ $(document).ready(function() {
         }
     } );
 
+    $("#modalAddPool #send").on('click', function(e){
+            var form = $('#modalAddPool #modalAdd');
+            console.log('inside')
+            //~ form.parsley().validate();
+            //~ var queryString = $('#modalAdd').serialize();
+            data=$('#modalAddPool #modalAdd').serializeObject();
+            delete data['path']
+            delete data['weight']
+            data['paths']=[];
+            data['paths']['bases']=table2json('table_bases');
+            data['paths']['templates']=table2json('table_templates');
+            data['paths']['groups']=table2json('table_groups');
+            data['paths']['isos']=table2json('table_isos');
+            //~ console.log(JSON.stringify(data));
+            console.log(data);
+            form.parsley().validate();
+                if (form.parsley().isValid()){alert('valid');}
+
+            //~ if (form.parsley().isValid()){
+                //~ template=$('#modalAddDesktop #template').val();
+                //~ console.log('TEMPLATE:'+template)
+                //~ if (template !=''){
+                    //~ data=$('#modalAdd').serializeObject();
+                    //~ console.log(data)
+                    //~ socket.emit('domain_add',data)
+                //~ }else{
+                    //~ $('#modal_add_desktops').closest('.x_panel').addClass('datatables-error');
+                    //~ $('#modalAddDesktop #datatables-error-status').html('No template selected').addClass('my-error');
+                //~ }
+            //~ }
+        });
+        
+        //~ $("#modalAddDesktop #btn-hardware").on('click', function(e){
+                //~ $('#modalAddDesktop #hardware-block').show();
+        //~ });
+
 });// document ready
 
 
@@ -210,18 +246,29 @@ function formatHypervisorPool ( d ) {
 }  
 
 
-function table2json(){
+function table2json(table){
 							var newFormData = [];
-							  $('#datatable_paths tr:not(:first)').each(function(i) {
+							  $('#'+table+' tr:not(:first)').each(function(i) {
 								var tb = jQuery(this);
 								var obj = {};
 								tb.find('input').each(function() {
-								  obj[this.name] = this.value;
+                                    if(this.name != ''){
+                                      obj[this.name] = this.value;
+                                    }
 								});
+                                tb.find('select').each(function() {
+                                        sel=this
+                                        obj[this.name]=[];
+                                        name=this.name
+                                        $(this).children('option').each(function() {
+                                          obj[name].push(this.value);
+                                        });
+                                });
 								//~ obj['row'] = i;
 								newFormData.push(obj);
 							  });
-							  console.log(newFormData);
+							  //~ console.log(newFormData);
+                              return newFormData;
 	
 	
 }
@@ -265,7 +312,10 @@ function hyper_list(){
                                 })
                             };
                         }
-                    }
+                    },
+                    createTag: function(params) {
+                                        return undefined;
+                                }
                 });
        
 }
@@ -298,7 +348,11 @@ function interfaces_list(){
                                 })
                             };
                         }
-                    }
+                    },
+                    createTag: function(params) {
+                                        return undefined;
+                                }
+
                 });
        
 }
