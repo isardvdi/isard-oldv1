@@ -1,6 +1,7 @@
 from flask import jsonify
 import os
 from flask import Flask
+from flask import send_file,make_response, redirect, url_for
 import json
 
 
@@ -27,11 +28,44 @@ def get_threads():
 
     return jsonify(threads=json_d), 200
 
+@app.route('/viewer/zipvv/fromuser/<string:user>')
+def download_vvs_fom_user(user):
+    return redirect('/viewer/zipvv/fromuser/{}/vv.zip'.format(user))
 
-
-@app.route('/create_domain/bulk_to_user/<string:username>/<string:template_id>/<int:quantity>/<string:prefix>', methods=['POST'])
-def create_domain_bulk():
+@app.route('/viewer/zipvv/fromuser/<string:user>/vv.zip')
+def download_vvs_fom_user_with_zip_name(user):
+    domains = app.db.get_domains_from_user(user,status='Started')
+    output_file = app.f.create_zip_vv(domains)
+    return send_file(output_file,
+                     as_attachment=True,
+                     attachment_filename='vv_{}.zip'.format(user),
+                     mimetype='application/zip')
+    # return Response(r.content,
+    #                 mimetype='application/zip',
+    #                 headers={'Content-Disposition': 'attachment;filename=zones.zip'})
     pass
+
+
+
+
+@app.route('/create_domain/bulk_to_user/<string:username>/<string:template_id>/<int:quantity>/<string:prefix>', methods=['GET'])
+def create_domain_bulk(username, template_id, quantity, prefix):
+    print(template_id)
+    for n in range(quantity):
+        suffix = str(n).zfill(2)
+        app.db.create_domain_from_template(template_id, '{}_{}'.format(prefix,suffix), username,
+                                       batch_create_id=prefix)
+    return 'ok'
+
+@app.route('/user/<string:user>/domains-batch/<string:batch_create_id>/start')
+def start_domains_from_user(user,batch_create_id):
+    for id in app.db.get_domains_from_user(user,status='Stopped',batch_create_id=batch_create_id):
+        app.db.update_domain_status('Starting',id)
+
+@app.route('/user/<string:user>/domains-batch/<string:batch_create_id>/stop')
+def stop_domains_from_user(user,batch_create_id):
+    for id in app.db.get_domains_from_user(user,status='Started',batch_create_id=batch_create_id):
+        app.db.update_domain_status('Stopping',id)
 
 @app.route('/create_domain/bulk_random_to_user/<string:username>/<int:quantity>/<string:prefix>', methods=['POST'])
 def create_domain_bulk_random_to_user():
@@ -65,6 +99,12 @@ def start_domain_with_prefix():
 @app.route('/action_with_domains/<string:action>/from_template/<string:template>', methods=['PUT'])
 def start_domain_with_prefix_from_template():
     pass
+
+@app.route('/viewer/vv/<string:domain_id>')
+def download_vv(domain_id):
+    pass
+
+
 
 
 

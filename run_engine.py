@@ -4,12 +4,14 @@ from engine.functions import get_threads_running
 from engine.functions import check_tables_populated
 from api import app
 from engine import db
+from engine import functions
 
 from gevent.wsgi import WSGIServer
 
 check_tables_populated()
 app.m = ManagerHypervisors()
 app.db = db
+app.f = functions
 # sleep(10)
 # get_threads_running()
 

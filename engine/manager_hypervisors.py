@@ -267,6 +267,7 @@ class ManagerHypervisors(object):
             log.debug('^^^^^^^^^^^^^^^^^^^ DOMAIN CHANGES THREAD ^^^^^^^^^^^^^^^^^')
             ui = UiActions(self.manager)
             r_conn = new_rethink_connection()
+            batch_create = {}
 
             # rtable=r.table('disk_operations')
             # for c in r.table('hypervisors').changes(include_initial=True, include_states=True).run(r_conn):
@@ -316,6 +317,28 @@ class ManagerHypervisors(object):
                 if (new_domain is True and new_status == "Creating") or \
                         (old_status == 'FailedCreatingDomain' and new_status == "Creating"):
                     ui.creating_disks_from_template(domain_id)
+
+                if (new_domain is True and new_status == "BatchCreating") or \
+                        (old_status == 'FailedCreatingDomain' and new_status == "BatchCreating"):
+                    cmds, batch_id, batch_total, hyp_to_disk_create = ui.creating_disks_from_template(domain_id,batchcreating = True)
+                    if batch_id not in batch_create.keys():
+                        batch_create[batch_id] = {}
+                        batch_create[batch_id]['total'] = batch_total
+                        batch_create[batch_id]['count'] = 1
+                        batch_create[batch_id]['cmds'] = {}
+                        batch_create[batch_id]['cmds'][domain_id] = cmds
+                        batch_create[batch_id]['domains'] = []
+                        batch_create[batch_id]['domains'].append(domain_id)
+
+                    else:
+                        batch_create[batch_id]['count'] += 1
+                        batch_create[batch_id]['cmds'][domain_id] = cmds
+                        batch_create[batch_id]['domains'].append(domain_id)
+
+                    if  batch_create[batch_id]['count'] >= batch_create[batch_id]['total']:
+                        ui.launch_batch_disk_operations_withouth_test_start(batch_create[batch_id]['cmds'])
+
+
 
                     # INFO TO DEVELOPER
                     # recoger template de la que hay que derivar

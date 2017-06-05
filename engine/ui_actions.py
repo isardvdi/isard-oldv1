@@ -25,7 +25,7 @@ from .qcow import create_cmd_disk_from_virtbuilder, get_host_long_operations_fro
 from .vm import xml_vm, update_xml_from_dict_domain, populate_dict_hardware_from_create_dict
 from .db import update_domain_status,get_hyp, create_disk_template_created_list_in_domain, remove_disk_template_created_list_in_domain
 from .db import get_hyp_hostnames_online,insert_ferrary,get_ferrary,delete_domain,update_domain_viewer_started_values
-from .functions import exec_remote_list_of_cmds,try_ssh, replace_path_disk
+from .functions import exec_remote_list_of_cmds,try_ssh, replace_path_disk, get_random_hyper
 from .pool_hypervisors import pools_stats
 
 
@@ -86,8 +86,7 @@ class UiActions(object):
         failed=False
         dict_domain = get_domain(id_domain)
         if pool_id in self.manager.pools.keys():
-            next_hyp,reason = self.manager.pools[pool_id].get_next(dict_domain=dict_domain)
-            log.debug('//////////////////////')
+            next_hyp = get_random_hyper(pool_id)
             if next_hyp is not False:
                 log.debug('next_hyp={}'.format(next_hyp))
                 self.manager.q.workers[next_hyp].put({'type':'start_paused_domain','xml':xml,'id_domain':id_domain})
@@ -508,10 +507,17 @@ class UiActions(object):
                 'Creating disk operation failed when insert action in queue for disk operations. Exception: {}'.format(e))
 
     def creating_disks_from_template(self,
-                                     id_new):
+                                     id_new,
+                                     batchcreating = False):
         dict_domain = get_domain(id_new)
         if 'create_dict' in dict_domain.keys():
             dict_to_create = dict_domain['create_dict']
+
+        if batchcreating is True:
+            dict_batch = dict_to_create['batch']
+            batch_id = dict_batch['id']
+            batch_total = dict_batch['total']
+
 
         pool_var = dict_domain['hypervisors_pools']
         pool_id = pool_var if type(pool_var) is str else pool_var[0]
@@ -539,32 +545,41 @@ class UiActions(object):
             backing_file = dict_to_create['hardware']['disks'][index_disk]['parent']
             new_file = dict_to_create['hardware']['disks'][index_disk]['file']
             path_selected = dict_to_create['hardware']['disks'][index_disk]['path_selected']
-            hyp_to_disk_create = get_host_disk_operations_from_path(path_selected, pool=pool_id, type_path='groups')
+            # hyp_to_disk_create = get_host_disk_operations_from_path(path_selected, pool=pool_id, type_path='groups')
+            hyp_to_disk_create = get_random_hyper(pool_id)
 
             cmds = create_cmds_disk_from_base(path_base=backing_file, path_new=new_file)
-            log.debug('commands to disk create to launch in disk_operations: \n{}'.format('\n'.join(cmds)))
-            action={}
-            action['type'] = 'create_disk'
-            action['disk_path'] = new_file
-            action['index_disk'] = index_disk
-            action['domain'] = id_new
-            action['ssh_comands'] = cmds
+            if batchcreating is False:
+                log.debug('commands to disk create to launch in disk_operations: \n{}'.format('\n'.join(cmds)))
+                action={}
+                action['type'] = 'create_disk'
+                action['disk_path'] = new_file
+                action['index_disk'] = index_disk
+                action['domain'] = id_new
+                action['ssh_comands'] = cmds
 
-            try:
-                update_domain_status(status='CreatingDisk',
-                             id_domain=id_new,
-                             hyp_id=False,
-                             detail='Creating disk operation is launched in hypervisor {} ({} operations in queue)'.format(
-                                     hyp_to_disk_create,
-                                          self.manager.q_disk_operations[hyp_to_disk_create].qsize()))
-                self.manager.q_disk_operations[hyp_to_disk_create].put(action)
+                try:
+                    update_domain_status(status='CreatingDisk',
+                                 id_domain=id_new,
+                                 hyp_id=False,
+                                 detail='Creating disk operation is launched in hypervisor {} ({} operations in queue)'.format(
+                                         hyp_to_disk_create,
+                                              # self.manager.q_disk_operations[hyp_to_disk_create].qsize()))
+                                         self.manager.q.workers[hyp_to_disk_create].qsize()))
+                    # self.manager.q_disk_operations[hyp_to_disk_create].put(action)
+                    self.manager.q.workers[hyp_to_disk_create].put(action)
 
-            except Exception as e:
-                update_domain_status(status='FailedCreatingDomain',
-                             id_domain=id_new,
-                             hyp_id=False,
-                             detail='Creating disk operation failed when insert action in queue for disk operations')
-                log.error('Creating disk operation failed when insert action in queue for disk operations. Exception: {}'.format(e))
+                except Exception as e:
+                    update_domain_status(status='FailedCreatingDomain',
+                                 id_domain=id_new,
+                                 hyp_id=False,
+                                 detail='Creating disk operation failed when insert action in queue for disk operations')
+                    log.error('Creating disk operation failed when insert action in queue for disk operations. Exception: {}'.format(e))
+            else:
+                return cmds, batch_id, batch_total, hyp_to_disk_create
+
+    def launch_batch_disk_operations_withouth_test_start(self,cmds):
+        pass
 
     def updating_from_create_dict(self, id_domain):
         try:
@@ -624,8 +639,16 @@ class UiActions(object):
 
         xml_raw = update_xml_from_dict_domain(id_domain)
         update_domain_status('CreatingDomain',id_domain,detail='xml and hardware dict updated, waiting to test if domain start paused in hypervisor')
-        pool_id = get_pool_from_domain(id_domain)
-        self.start_paused_domain_from_xml(xml=xml_raw,id_domain=id_domain,pool_id=pool_id)
+        if 'batch' in domain.keys():
+            #is batch operation, not start paused
+            print('½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½')
+            print('½½½½½½½½½½½½½½½½{}½½½½½½½½½½½½½½½½½½½½½½'.format(id_domain))
+            print('½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½½')
+            log.info('domain {} not start paused when is a batch operation')
+            update_domain_status('Stopped',id_domain,detail='xml and hardware dict updated, is a batch operation, ready to start')
+        else:
+            pool_id = get_pool_from_domain(id_domain)
+            self.start_paused_domain_from_xml(xml=xml_raw,id_domain=id_domain,pool_id=pool_id)
 
 
     # INFO TO DEVELOPER: HAY QUE QUITAR CATEGORY Y GROUP DE LOS PARÁMETROS QUE RECIBE LA FUNCIÓN

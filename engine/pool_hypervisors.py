@@ -11,7 +11,7 @@ from random import random
 
 from .hyp import hyp
 from .log import *
-from .db import get_hyp_hostnames, update_hyp_status, update_db_hyp_info
+from .db import get_hyp_hostnames, update_hyp_status, update_db_hyp_info, get_weights_profiles_ids
 # from ui_actions import UiActions
 from .db import get_domain, get_weights_config, get_weight_profile_for_pool
 from .db import get_hypers_in_pool
@@ -225,11 +225,17 @@ class HypStats(object):
         self.hyp_stats.pop(id_hyp)
         self.lock.release()
 
-    def calculate_scores(self,hyps_to_choose):
+    def calculate_scores(self,hyps_to_choose,force_pool_weights=False):
         d_scores = dict()
         score_selected = None
         hyp_selected = None
-        self.pool_weights = get_weight_profile_for_pool(self.id_pool )
+        if force_pool_weights is not False:
+            if force_pool_weights in get_weights_profiles_ids():
+                self.pool_weights = force_pool_weights
+            else:
+                self.pool_weights = get_weight_profile_for_pool(self.id_pool)
+        else:
+            self.pool_weights = get_weight_profile_for_pool(self.id_pool )
 
         for hyp_id in hyps_to_choose:
             d_scores[hyp_id] = dict()

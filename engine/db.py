@@ -338,7 +338,8 @@ def create_domain_from_template(id_template,name,id_user,try_run = False,
                                 force_interface = None,
                                 force_boot_order = None,
                                 new_graphics = 'default',
-                                new_video = 'default'
+                                new_video = 'default',
+                                batch_create_id = None
                                 ):
 
     if name.replace('_','').replace('-','').isalnum() is False:
@@ -406,6 +407,10 @@ def create_domain_from_template(id_template,name,id_user,try_run = False,
     new_icon = d_template['icon']
     new_os = d_template['os']
 
+    if get_domain(new_id) is not None:
+        log.error('new domain id exist: {} '.format(new_id))
+        return False
+
     d_new = \
     {'allowed'          : {'categories': False,
                            'groups'    : False,
@@ -434,6 +439,11 @@ def create_domain_from_template(id_template,name,id_user,try_run = False,
      'status'           : 'Creating',
      'user'             : id_user,
      'xml'              : None}
+
+    if type(batch_create_id) is str:
+        d_new['batch'] = {}
+        d_new['batch']['id'] = batch_create_id
+
 
     if try_run is False:
         rtable = r.table('domains')
@@ -1239,9 +1249,11 @@ def get_weights_profiles_ids():
     r_conn = new_rethink_connection()
     rtable=r.table('weights_profiles')
 
-    l = list(rtable.pluck('id').run(r_conn))
+    x = list(rtable.pluck('id').run(r_conn))
+    l = [i['id'] for i in x]
 
     close_rethink_connection(r_conn)
+
     return l
 
 def get_weights_config():
@@ -1450,12 +1462,23 @@ def get_all_domains_with_id_and_status(status=None,kind='desktop'):
     close_rethink_connection(r_conn)
     return l
 
-def get_domains_from_user(user,kind='desktop'):
+def get_domains_from_user(user,only_ids=True,kind='desktop',status=None,batch_create_id=None):
     r_conn = new_rethink_connection()
     rtable=r.table('domains')
-    l = list(rtable.filter({'user':user,'kind':kind}).pluck('status','id','kind',{'hardware':[{'disks':['file']}]}).run(r_conn))
-    close_rethink_connection(r_conn)
-    return [{'kind': s['kind'], 'id': s['id'], 'status': s['status'], 'disk': s['hardware']['disks'][0]['file']} for s in l]
+    filter_dict = {'user':user,'kind':kind}
+    if type(status) is str:
+        filter_dict['status'] = status
+    if type(batch_create_id) is str:
+        filter_dict['batch'] = {'id': batch_create_id}
+    if only_ids is True:
+        l = list(rtable.filter(filter_dict).pluck('id').run(r_conn))
+        close_rethink_connection(r_conn)
+        return [s['id'] for s in l]
+    else:
+        l = list(rtable.filter(filter_dict).pluck('status','id','kind',{'hardware':[{'disks':['file']}]}).run(r_conn))
+        close_rethink_connection(r_conn)
+
+        return [{'kind': s['kind'], 'id': s['id'], 'status': s['status'], 'disk': s['hardware']['disks'][0]['file']} for s in l]
 
 def start_all_domains_from_user(user):
     l = get_domains_from_user(user)

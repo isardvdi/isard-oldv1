@@ -129,6 +129,8 @@ def launch_action_disk(action,hostname,user,port):
                                      user=user,
                                      port=port)
 
+
+
     if action['type'] == 'create_disk':
         if len([k['err'] for k in array_out_err if len(k['err']) == 0]):
             ##TODO: TEST WITH MORE THAN ONE DISK, 2 list_backing_chain must be created
@@ -391,6 +393,8 @@ class HypWorkerThread(threading.Thread):
         host,port,user = get_hyp_hostname_from_id(self.hyp_id)
         port = int(port)
         self.hostname = host
+        self.user = user
+        self.port = port
         self.h = hyp(self.hostname,user=user,port=port)
         self.h.get_hyp_info()
         update_db_hyp_info(self.hyp_id,self.h.info)
@@ -440,6 +444,12 @@ class HypWorkerThread(threading.Thread):
                     except Exception as e:
                         update_domain_status('Crashed',action['id_domain'],hyp_id=self.hyp_id,detail='domain {} failed when try to start in pause mode in hypervisor {}. creating domain operation is aborted')
                         log.error('Exception starting paused xml for domain {} in hypervisor {}. NOT LIBVIRT EXCEPTION, RARE CASE. Exception message: '.format(str(e)))
+
+                elif action['type'] in ['create_disk']:
+                    launch_action_disk(action,
+                                       self.hostname,
+                                       self.user,
+                                       self.port)
 
                 ## START DOMAIN
                 elif action['type'] == 'start_domain':

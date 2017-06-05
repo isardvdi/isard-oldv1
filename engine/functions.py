@@ -18,10 +18,113 @@ import threading
 import json
 import xmltodict
 import ctypes
+import zipfile
+import random
+import string
 from time import sleep
+from random import randrange
 from .db import update_domain_progress, insert_disk_operation, update_disk_operation, get_disks_all_domains
 from .db import get_domain, insert_domain, update_domain_createing_template, get_domain_spice,get_config
 from .db import update_domain_status, update_disk_backing_chain, table_config_created_and_populated
+from .db import get_hypers_in_pool
+
+
+def create_zip_vv(list_domains,output_path=None):
+    randstr = ''.join(random.choice(string.ascii_lowercase) for _ in range(15))
+    tmp_dir = '/tmp/vv_dir_' + randstr
+    if os.path.isdir(tmp_dir):
+        os.rmdir(tmp_dir)
+    os.mkdir(tmp_dir)
+    for d in list_domains:
+        vv = get_spice_vv(d)
+        if vv:
+            filename = tmp_dir + '/' + d + '.vv'
+            f=open(filename,'w')
+            f.write(vv)
+            f.close()
+
+    if output_path is None:
+        output_path = '/tmp/vv_zip_' + randstr + '.zip'
+
+    with zipfile.ZipFile(output_path, 'w') as myzip:
+        for f in os.listdir(tmp_dir):
+            myzip.write(tmp_dir + '/' + f, f)
+
+    for f in os.listdir(tmp_dir):
+        os.remove(tmp_dir + '/' + f)
+    os.rmdir(tmp_dir)
+
+    return output_path
+
+
+def get_spice_vv(domain_id,full_screen=True,autodestroy=True):
+    d_domain = get_domain(domain_id)
+    if not d_domain:
+        return False
+    if not d_domain['status'] == 'Started':
+        return False
+
+    name = d_domain['name']
+    user = d_domain['user']
+    d_viewer = d_domain['viewer']
+    d_graphics = d_domain['hardware']['graphics']
+
+    if full_screen is True:
+        full_screen_value = 1
+    else:
+        full_screen_value = 0
+
+    if autodestroy is False:
+        autodestroy_value = 0
+    else:
+        autodestroy_value = 1
+
+    if not d_viewer['tlsport']:
+        insecure_comment = ''
+        secure_comment = ';'
+        tlsport = ''
+        port = d_viewer['port']
+    else:
+        tlsport = d_viewer['tlsport']
+        port = ''
+        insecure_comment = ';'
+        secure_comment = ''
+        consola = """[virt-viewer]
+    type={type_graphics}
+    host={hostname}
+    {insecure}port={port}
+    {secure}tls-port={tlsport}
+    password={passwd}
+    fullscreen={full_screen_0_or_1}
+    title={title} ({user})- SHIFT+F12 to exit
+    enable-smartcard=0
+    enable-usb-autoshare=1
+    delete-this-file={autodestroy_0_or_1}
+    usb-filter=-1,-1,-1,-1,0
+    {secure}tls-ciphers=DEFAULT
+    ;host-subject=O=%s,CN=%s
+    {secure}ca={cacert}
+    toggle-fullscreen=shift+f11
+    release-cursor=shift+f12
+    secure-attention=ctrl+alt+end
+    {secure}secure-channels=main;inputs;cursor;playback;record;display;usbredir;smartcard
+""".format(title = name,
+           user = user,
+           secure = secure_comment,
+           insecure = insecure_comment,
+           type_graphics=d_graphics['type'],
+           hostname = d_viewer['hostname'],
+           port = port,
+           tlsport = tlsport,
+           passwd = d_viewer['passwd'],
+           full_screen_0_or_1 = full_screen_value,
+           autodestroy_0_or_1 = autodestroy_value,
+           cacert = d_graphics['certificate'].strip().replace('\n','\\n')
+           )
+
+
+    consola = consola.replace("'", "")
+    return consola
 
 def check_tables_populated():
     while True:
@@ -1017,6 +1120,9 @@ def normalize_parameter(input_value,d_weights_config):
 
     return round(out,2)
 
+def get_random_hyper(id_pool):
+    hypers = get_hypers_in_pool(id_pool)
+    return hypers[randrange(0,len(hypers))]
 
 def analize_backing_chains_outputs(array_out_err=[],path_to_write_json=None,path_to_read_json=None):
 
