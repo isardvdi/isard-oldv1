@@ -9,7 +9,7 @@
 import rethinkdb as r
 from flask import current_app
 
-from ..lib.log import *
+#~ from ..lib.log import *
 
 # Since no older versions than 0.9 are supported for Flask, this is safe
 from flask import _app_ctx_stack as stack
@@ -31,6 +31,9 @@ class RethinkDB(object):
                 ctx.rethinkdb.close()
 
     def connect(self):
+        #~ print('self.db: '+str(self.db))
+        #~ print('current_app.config: '+current_app.config['RETHINKDB_DB'])
+        #~ print(self.db or current_app.config['RETHINKDB_DB'])
         return r.connect(host=current_app.config['RETHINKDB_HOST'],
                          port=current_app.config['RETHINKDB_PORT'],
                          auth_key=current_app.config['RETHINKDB_AUTH'],
