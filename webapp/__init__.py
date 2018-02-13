@@ -100,9 +100,9 @@ def send_font_linux(path):
 #~ def send_socketio(path):
     #~ return send_from_directory(os.path.join(app.root_path, 'bower_components/socket.io-client/lib/socket.js'), path)
     
-@app.route('/isard_dist/<path:path>')
-def send_isardist(path):
-    return send_from_directory(os.path.join(app.root_path, 'isard_dist'), path)
+# ~ @app.route('/isard_dist/<path:path>')
+# ~ def send_isardist(path):
+    # ~ return send_from_directory(os.path.join(app.root_path, 'isard_dist'), path)
 
 @app.route('/static/<path:path>')
 def send_static_js(path):

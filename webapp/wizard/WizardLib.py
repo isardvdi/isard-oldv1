@@ -60,13 +60,19 @@ class Wizard():
                     from pynpm import YarnPackage
                     pkg = YarnPackage(os.path.join(os.path.dirname(__file__).rsplit('/',2)[0]+'/install/package.json'))
                     res = pkg.install()
-                    res = True
+                    if res == 1:
+                        wlog.error("\n\n")
+                        wlog.error("Can't install Javascript and CSS required libs automatically!")
+                        wlog.error("   INSTALL AUTOMATICALLY:")
+                        wlog.error("      Restart with permissions on this folder.")
+                        wlog.error("   INSTALL MANUALLY:")
+                        wlog.error('      Install yarn: https://yarnpkg.com/lang/en/docs/install')
+                        wlog.error('      and run yarn from install folder before starting again.')                
+                        exit(1)                       
                 except:
-                    res=False
-                if res is False:
-                    wlog.error('Javascript and CSS not installed!')
-                    wlog.error(' Please install yarn: https://yarnpkg.com/lang/en/docs/install')
-                    wlog.error(' and run yarn from install folder before starting again.')                
+                    # ~ wlog.error('Javascript and CSS not installed!')
+                    # ~ wlog.error(' Please install yarn: https://yarnpkg.com/lang/en/docs/install')
+                    # ~ wlog.error(' and run yarn from install folder before starting again.')                
                     exit(1)
             self.run_server()
             

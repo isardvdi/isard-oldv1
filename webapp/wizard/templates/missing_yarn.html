@@ -11,6 +11,7 @@
 
   </head>
 
+<!--
   <style>
       body {
           background: #fff;
@@ -19,6 +20,7 @@
         background: -o-linear-gradient(#fff, #999);
      }
   </style>
+-->
 
   <style>
     input[type=button] {
@@ -135,13 +137,18 @@
         {% endfor %}
     </p>
     
+<!--
     {% if chk.docker == true %}<span style="color:blue">Seems a Docker installation</span>{% else %}<span style="color:blue">Seems a Host installation</span>{% endif %}
+-->
     <table>
         <tr>
             <td>JS and CSS libraries (yarn):</td>
             <td><b>{% if chk.yarn == true %}<span style="color:green">OK</span>{% else %}<span style="color:red">Not installed</span>{% endif %}</b></td>
+<!--
             <td>{% if chk.yarn == false %}<a href="#jsModal">Open Modal</a><input type="button" value="+Info">{% endif %}</td>
+-->
         </tr>
+<!--
         <tr>
             <td>Configuration file (isard.conf):</td>
             <td><b>{% if chk.config == true %}<span style="color:green">OK</span>{% else %}<span style="color:red">Not found</span>{% endif %}</b></td>
@@ -167,12 +174,14 @@
             <td><b>{% if chk.isard_db == true %}<span style="color:green">OK</span>{% else %}<span style="color:red">Not found</span>{% endif %}</b></td>
             <td>{% if chk.isard_db == false %}<input type="button" value="+Info" onClick="">{% endif %}</td>
         </tr>
+-->
 <!--
         <tr>
             <td>Type of install:</td>
             <td><b>{% if chk.docker == true %}<span style="color:green">Docker</span>{% else %}<span style="color:green">Host</span>{% endif %}</b></td>
         </tr>
 -->
+<!--
         <tr>
             <td>Hypervisor online:</td>
             <td><b>{% if chk.hypervisor == true %}<span style="color:green">OK</span>{% else %}<span style="color:orange">No</span>{% endif %}</b></td>
@@ -192,6 +201,7 @@
                 {% endif %}
                 </td>
         </tr>
+-->
     </table>
 
     
@@ -202,16 +212,27 @@
 
 
 
+<!--
     <div id="jsModal" class="modalDialog">
+-->
         <div><a href="#close" title="Close" class="close">X</a>
-            <h2>How to install JS ans CSS libraries</h2>
+            <h2>INSTALL JS and CSS libraries: Automatically</h2>
+            <p>Run again the script with valid permissions on webapp folder.</p>
+        </div>
+        
+        <div><a href="#close" title="Close" class="close">X</a>
+            <h2>INSTALL JS and CSS libraries: Manually install JS ans CSS libraries</h2>
             <p>Fedora/CentOS.</p>
             <pre><code>sudo dnf install npm && npm -g install yarn</code></pre>
-            <pre><code>yarn</code></pre>
+            <pre><code>cd install</code></pre>
+            <pre><code>sudo yarn</code></pre>
             <p><a href="https://yarnpkg.com/lang/en/docs/install/" target="_blank">https://yarnpkg.com/lang/en/docs/install/</a></p>
         </div>
+<!--
     </div>
+-->
 
+<!--
     <div id="configModal" class="modalDialog">
         <div><a href="#close" title="Close" class="close">X</a>
             <h2>Could not find isard.conf file</h2>
@@ -221,6 +242,7 @@
             <p><a href="https://yarnpkg.com/lang/en/docs/install/" target="_blank">https://yarnpkg.com/lang/en/docs/install/</a></p>
         </div>
     </div>
+-->
       
   <script></script>
 </html>
