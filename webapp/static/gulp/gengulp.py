@@ -6,6 +6,7 @@ css=[]
 cssadmin=[]
 for filename in glob.iglob(root_dir + '**/*.html', recursive=True):
     if 'classroom' in filename: continue
+    if 'base.html' in filename: continue
     comment=False
     for line in open(filename,'r'):
         if '<!--' in line and '-->' in line: 
@@ -68,26 +69,32 @@ for filename in glob.iglob(root_dir + '**/*.html', recursive=True):
                 print(filename)
                 print(line)
 # ~ import pprint
-# ~ pprint.pprint(css)
+# ~ pprint.pprint(js)
 # ~ pprint.pprint(cssadmin)
                 
-listjs=set(js)
+# ~ listjs=set(js)
+listjs=sorted(set(js), key=js.index)
+# ~ import pprint
+# ~ pprint.pprint(listjs)
 datajs=[]
 for l in listjs:
     datajs.append('../../'+l)
 
-listjsadmin=set(jsadmin)
+# ~ listjsadmin=set(jsadmin)
+listjsadmin=sorted(set(jsadmin), key=jsadmin.index)
 datajsadmin=[]
 for l in listjsadmin:
     datajsadmin.append('../../'+l)
 
 
-listcss=set(css)
+# ~ listcss=set(css)
+listcss=sorted(set(css), key=css.index)
 datacss=[]
 for l in listcss:
     datacss.append('../../'+l)
 
-listcssadmin=set(cssadmin)
+# ~ listcssadmin=set(cssadmin)
+listcssadmin=sorted(set(cssadmin), key=cssadmin.index)
 datacssadmin=[]
 for l in listcssadmin:
     datacssadmin.append('../../'+l)
@@ -133,16 +140,20 @@ var gulp = require('gulp'),
     minifyCSS = require('gulp-minify-css'),
     concat = require('gulp-concat'),
     uglify = require('gulp-uglify'),
-    prefix = require('gulp-autoprefixer');
+    prefix = require('gulp-autoprefixer'),
+    sourcemaps = require('gulp-sourcemaps');
 
 var app = {};
 app.addScript = function(paths, outputFilename) {
     return gulp.src(paths)
-        .pipe(concat(outputFilename)) // concat files
-        .pipe(uglify().on('error', function(e){
-            console.log(e);
-         }))
-        .pipe(gulp.dest('../../static/isard'));
+        .pipe(sourcemaps.init())
+          .pipe(concat(outputFilename)) // concat files
+        .pipe(sourcemaps.write())    
+        
+//        .pipe(uglify().on('error', function(e){
+//            console.log(e);
+//         }))
+        .pipe(gulp.dest('../../static/build'));
 };
 
 gulp.task('isard-user-js', function () {
@@ -159,7 +170,7 @@ app.addStyle = function(paths, outputFilename) {
     .pipe(concat(outputFilename))
     .pipe(minifyCSS())
     .pipe(prefix('last 2 versions'))
-    .pipe(gulp.dest('../../static/isard'))
+    .pipe(gulp.dest('../../static/build'))
 };
 
 gulp.task('isard-user-css', function () {
