@@ -1,0 +1,52 @@
+
+
+<script>
+	var stack_center = {"dir1": "down", "dir2": "right", "firstpos1": 25, "firstpos2": ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2)};
+				$(window).resize(function(){
+					stack_center.firstpos2 = ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2);
+				});
+    PNotify.prototype.options.styling = "bootstrap3";
+</script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+	  {% if messages %}
+		{% for category, message in messages %}
+			<script type="text/javascript">
+  			new PNotify({
+				title: "{{ nav }}",
+				text: "{{ message }}",
+				hide: true,
+				delay: 1000,
+				opacity: 1,
+				type: "{{ category }}",
+				stack: stack_center
+			});
+			</script>	
+		{% endfor %}
+	  {% endif %}
+	{% endwith %}
+	
+
+<!--
+		{% with messages = get_flashed_messages(with_categories=true) %}
+		  {% if messages %}
+			{% for category, message in messages %}
+				<script type="text/javascript">
+				var stack_center = {"dir1": "down", "dir2": "right", "firstpos1": 25, "firstpos2": ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2)};
+				$(window).resize(function(){
+					stack_center.firstpos2 = ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2);
+				});
+  				new PNotify({
+					title: "{{ nav }}",
+					text: "{{ message }}",
+					hide: true,
+					//~ icon: 'fa fa-alert-sign',
+					opacity: 1,
+					type: "error",
+					stack: stack_center
+				});
+				</script>			
+			{% endfor %}
+		  {% endif %}
+		{% endwith %}	
+-->

@@ -10,3 +10,4 @@ npm install --save-dev gulp-concat
 npm install --save-dev gulp-uglify
 npm install --save-dev gulp-autoprefixer
 npm install --save-dev gulp-sourcemaps
+npm install --save-dev gulp-replace

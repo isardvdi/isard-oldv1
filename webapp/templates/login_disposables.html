@@ -13,8 +13,6 @@
     <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
-    <!-- Animate.css -->
-    <link href="/vendors/animate.css/animate.min.css" rel="stylesheet">
 	<!-- PNotify -->
 	<link href="/vendors/pnotify/dist/pnotify.css" media="all" rel="stylesheet" type="text/css" />
 	<link href="/vendors/pnotify/dist/pnotify.buttons.css" media="all" rel="stylesheet" type="text/css" />
@@ -80,30 +78,10 @@
     <!-- PNotify -->
 	<script type="text/javascript" src="/vendors/pnotify/dist/pnotify.js"></script>
 	<script type="text/javascript" src="/vendors/pnotify/dist/pnotify.confirm.js"></script>
-	<script type="text/javascript" src="/vendors/pnotify/dist/pnotify.buttons.js"></script>    
-	<script>PNotify.prototype.options.styling = "bootstrap3";</script>
+	<script type="text/javascript" src="/vendors/pnotify/dist/pnotify.buttons.js"></script>   
+	     <!-- isard initializers -->
 
-		{% with messages = get_flashed_messages(with_categories=true) %}
-		  {% if messages %}
-			{% for category, message in messages %}
-				<script type="text/javascript">
-				var stack_center = {"dir1": "down", "dir2": "right", "firstpos1": 25, "firstpos2": ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2)};
-				$(window).resize(function(){
-					stack_center.firstpos2 = ($(window).width() / 2) - (Number(PNotify.prototype.options.width.replace(/\D/g, '')) / 2);
-				});
-  				new PNotify({
-					title: "{{ nav }}",
-					text: "{{ message }}",
-					hide: true,
-					//~ icon: 'fa fa-alert-sign',
-					opacity: 1,
-					type: "error",
-					stack: stack_center
-				});
-				</script>			
-			{% endfor %}
-		  {% endif %}
-		{% endwith %}
+	{% include 'flash_messages.html' %}
     <!-- Isard restful ajax calls -->
     <script src="/static/js/restful.js"></script>
     {% if disposables %}
@@ -111,8 +89,6 @@
         <script src="/static/vendor/socket.io.min.js"></script>
         <script src="/static/js/viewer.js"></script> 
         <script src="/static/js/disposables.js"></script>
-        <script>
-      
-        </script>
+
     {% endif %}
 </html>
