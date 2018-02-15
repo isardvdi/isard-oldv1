@@ -17,6 +17,9 @@
     
     
     <link href="/static/build/isard-user.css" rel="stylesheet">
+    {% if current_user.role == 'admin' %}
+        <link href="/static/build/isard-admin.css" rel="stylesheet">
+    {% endif%}
     
 <!--
     <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -34,6 +37,9 @@
     <link href="/build/css/custom.css" rel="stylesheet">
     <link href="/static/isard.css" rel="stylesheet">
 -->
+    <link href="/vendors/dropzone/dist/min/dropzone.min.css" rel="stylesheet">
+
+
 
     {% block css %}{% endblock %}
   </head>
@@ -123,6 +129,29 @@
     <script src="/static/js/snippets/profile_graphs.js"></script>
     <script src="/static/js/snippets/quota.js"></script>
 -->
+
+    <script src="/vendors/dropzone/dist/min/dropzone.min.js"></script>
+    <script src="/js/restful.js"></script>
+    <script src="/static/admin/js/config.js"></script>  
+
+    <script src="/static/admin/js/domains_installs.js"></script>    
+    <script src="/static/admin/js/domains.js"></script>     
+    
+    <script src="/static/admin/js/domains_resources.js"></script>
+    
+    <script src="/static/admin/js/hypervisors.js"></script>  
+    <script src="/static/admin/js/hypervisors_detail.js"></script> 
+    <script src="/static/admin/js/hypervisors_pools.js"></script> 
+    
+    <script src="/admin/js/media.js"></script>
+    
+    <script src="/admin/js/updates.js"></script>
+        
+    <script src="/static/admin/js/users.js"></script>
+    <script src="/static/admin/js/roles.js"></script>
+    <script src="/static/admin/js/categories.js"></script>
+    <script src="/static/admin/js/groups.js"></script>
+    
     
 	{% include 'flash_messages.html' %}
 
