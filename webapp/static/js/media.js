@@ -7,78 +7,73 @@
 
 
 $(document).ready(function() {
-setDropzone();    
+
+    modal_add_install = $('#modal_add_install').DataTable()
+	initialize_modal_all_install_events()
+    
 	$('.btn-new').on('click', function () {
-            $("#modalAddMediaForm")[0].reset();
-			$('#modalAddMedia').modal({
-				backdrop: 'static',
-				keyboard: false
-			}).modal('show');
-            $('#modalAddMediaForm').parsley();
-            $('#modalAddMediaForm #name').focus(function(){
-                if($(this).val()=='' && $('#modalAddMediaForm #url').val() !=''){
-                    $(this).val($('#modalAddMediaForm #url').val().split('/').pop(-1));
+                if($('.quota-isos .perc').text() >=100){
+                    new PNotify({
+                        title: "Quota for adding isos full.",
+                        text: "Can't create add another iso, quota full.",
+                        hide: true,
+                        delay: 3000,
+                        icon: 'fa fa-alert-sign',
+                        opacity: 1,
+                        type: 'error'
+                    });
+                }else{	
+                    $("#modalAddMediaForm")[0].reset();
+                    $('#modalAddMedia').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    }).modal('show');
+                    $('#modalAddMediaForm').parsley();
+                    $('#modalAddMediaForm #name').focus(function(){
+                        if($(this).val()=='' && $('#modalAddMediaForm #url').val() !=''){
+                            $(this).val($('#modalAddMediaForm #url').val().split('/').pop(-1));
+                        }
+                    });
+                    setAlloweds_add('#modalAddMedia #alloweds-add');
                 }
-            });
-            setAlloweds_add('#modalAddMediaForm #alloweds-add');
 	});
 
-	$('.btn-new-local').on('click', function () {
-            $("#modal-add-media-form-local")[0].reset();
-			$('#modalAddMediaLocal').modal({
-				backdrop: 'static',
-				keyboard: false
-			}).modal('show');
-            
-            $('#modal-add-media-form-local').parsley();
-            //~ $('#modal-add-media-form-local #name').focus(function(){
-                //~ console.log(($(this).val()))
-                //~ if($(this).val()=='' && $('#modalAddMediaFormLocal #url').val() !=''){
-                    //~ console.log($('#modalAddMediaForm #url').val())
-                    //~ $(this).val($('#modalAddMediaForm #url').val().split('/').pop(-1));
-                //~ }
-            //~ });
-            setAlloweds_add('#modalAddMediaLocal #alloweds-add');
-	});
-    
     var table=$('#media').DataTable( {
         "ajax": {
-                //~ "url": "/admin/table/media/get",
-                //~ "dataSrc": ""
-				"url": "/admin/tabletest/media/post",
-                "contentType": "application/json",
-                "type": 'POST',
-                "data": function(d){return JSON.stringify({'flatten':false})}            
+                "url": "/media/get",
+                "dataSrc": ""
+				//~ "url": "/admin/tabletest/media/post",
+                //~ "contentType": "application/json",
+                //~ "type": 'POST',
+                //~ "data": function(d){return JSON.stringify({'flatten':false})}            
         },
-        "sAjaxDataProp": "",
 			"language": {
 				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
 			},
 			"rowId": "id",
 			"deferRender": true,
         "columns": [
-				//~ {setDropzone();
-                //~ "className":      'details-control',
-                //~ "orderable":      false,
-                //~ "data":           null,
-                //~ "width": "10px",
-                //~ "defaultContent": '<button class="btn btn-xs btn-info" type="button"  data-placement="top" ><i class="fa fa-plus"></i></button>'
-				//~ },
-            { "data": "icon"},
-            { "data": "name"},
-            { "data": "user"},
-            { "data": null},
-                {"data": null,
-                 'defaultContent': ''},  
-        ],
+				{
+                "className":      'details-control',
+                "orderable":      false,
+                "data":           null,
+                "width": "10px",
+                "defaultContent": '' //'<button class="btn btn-xs btn-info" type="button"  data-placement="top" ><i class="fa fa-plus"></i></button>'
+				},
+                { "data": "icon"},
+                { "data": "name"},
+                //~ { "data": "status"},
+                { "data": null},
+                {"data": null, 'defaultContent': ''},  
+            ],
         "columnDefs": [ 
 							{
-							"targets": 0,
+							"targets": 1,
 							"render": function ( data, type, full, meta ) {
 							  return renderIcon(full);
 							}},
 							{
-							"targets": 1,
+							"targets": 2,
 							"render": function ( data, type, full, meta ) {
 							  return renderName(full);
 							}},
@@ -101,7 +96,9 @@ setDropzone();
                                     return '<button id="btn-abort" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-stop" style="color:darkred"></i></button>'
                                 }
                                 if(full.status == 'Downloaded' || full.status == 'Stopped'){
-                                    return '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button>'
+                                    return '<button id="btn-createfromiso" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-desktop" style="color:darkgreen"></i></button> \
+                                            <button id="btn-alloweds" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-users" style="color:darkblue"></i></button> \
+                                            <button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button>'
                                 } 
                                 return full.status;                                 
                                 }}],
@@ -161,7 +158,35 @@ setDropzone();
                             }).on('pnotify.cancel', function() {
                     });	             
                 break;
-
+             case 'btn-alloweds':
+                    modalAllowedsFormShow('media',data)
+                break;                
+            case 'btn-createfromiso':
+                if($('.quota-desktops .perc').text() >=100){
+                    new PNotify({
+                        title: "Quota for adding new desktop full.",
+                        text: "Can't create add another desktop, quota full.",
+                        hide: true,
+                        delay: 3000,
+                        icon: 'fa fa-alert-sign',
+                        opacity: 1,
+                        type: 'error'
+                    });
+                }else{	
+                    $("#modalAddFromMedia #modalAdd")[0].reset();
+                    setHardwareOptions('#modalAddFromMedia','iso');
+                    $('#modalAddFromMedia #modalAdd #media').val(data.id);
+                    $('#modalAddFromMedia #modalAdd #media_name').html(data.name);
+                    $('#modalAddFromMedia #modalAdd #media_size').html(data['progress-total']);
+                    $('#modalAddFromMedia').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    }).modal('show');
+                    
+                    $('#modalAddFromMedia #modalAdd').parsley();
+                    modal_add_install_datatables();
+                }
+            break;
         };
 
 
@@ -189,21 +214,24 @@ setDropzone();
 
         });
 
+
+
+
+
     // SocketIO
-    socket = io.connect(location.protocol+'//' + document.domain + ':' + location.port+'/sio_admins');
+    socket = io.connect(location.protocol+'//' + document.domain + ':' + location.port+'/sio_users');
      
     socket.on('connect', function() {
         connection_done();
-        socket.emit('join_rooms',['media'])
-        console.log('Listening media namespace');
+        console.log('Listening users namespace');
     });
 
     socket.on('connect_error', function(data) {
       connection_lost();
     });
     
+     
     socket.on('user_quota', function(data) {
-        console.log('Quota update')
         var data = JSON.parse(data);
         drawUserQuota(data);
     });
@@ -252,6 +280,8 @@ setDropzone();
         if(data.result){
             $("#modalAddMediaForm")[0].reset();
             $("#modalAddMedia").modal('hide');
+            $("#modalAddFromMedia #modalAdd")[0].reset();
+            $("#modalAddFromMedia").modal('hide');            
         }
         new PNotify({
                 title: data.title,
@@ -319,67 +349,126 @@ function icon(name){
 }
 
 
-//~ function setDropzone(){
-    //~ console.log('set dropzone')
-    //~ Dropzone.autoDiscover = false;
-    //~ var myDropzone     = new Dropzone("div#myDropzone", { 
-        //~ url: '/admin/media/localupload',
-        //~ paramName: 'someParameter[image]',
-  //~ autoProcessQueue: false,// used for stopping auto processing uploads
-  //~ autoDiscover: false,        
-    //~ });
-
-    //~ $('#modalAddMediaLocalForm #send').click(function(){           
-      //~ myDropzone.processQueue();
-    //~ });
-
-    //~ myDropzone.on('sending', function(file, xhr, formData){
-        //~ formData.append('someParameter[image]', file);
-        //~ formData.append('someParameter[userName]', 'bob');
-    //~ }); 
-    
-//~ }
-
- 
- 
-function setDropzone(){
-        Dropzone.autoDiscover = false;
-
-        var myDropzone = new Dropzone("div#myDropzone", {
-          url: '/admin/media/localupload',
-
-          maxFiles:1,
-          queueLimit:1,
-          //~ acceptedFiles:".zip",
-          init: function() {
-          this.on("maxfilesexceeded", function(file) {
-                this.removeAllFiles();
-                this.addFile(file);
-          })
-          this.on("error", function(file){if (!file.accepted) this.removeFile(file);});
-},
-          //~ previewsContainer:"#previewsContainer",
-
-          sending:function(file, xhr, formData){
-          formData.append('name',$("#name").val() );
-          formData.append('description',$("#description").val() );
-
-          },
-          success: function(file, response){
-                alert(response);
-            },
-
-          autoProcessQueue: false,
-        });
 
 
-        $('#modal-add-media-form-local #send').on('click', function(e){
-          myDropzone.processQueue();
-        }); 
 
-    myDropzone.on('sending', function(file, xhr, formData){
-        formData.append('someParameter[image]', file);
-        formData.append('someParameter[userName]', 'bob');
-    });            
+// MODAL install FUNCTIONS
+function initialize_modal_all_install_events(){
+   $('#modal_add_install tbody').on( 'click', 'tr', function () {
+        rdata=modal_add_install.row(this).data()
+        if ( $(this).hasClass('selected') ) {
+            $(this).removeClass('selected');
+            $('#modal_add_install').closest('.x_panel').addClass('datatables-error');
+            $('#modalInstall #datatables-install-error-status').html('No OS template selected').addClass('my-error');
+            
+            $('#modalInstall #install').val('');
+        }
+        else {
+            modal_add_install.$('tr.selected').removeClass('selected');
+            $(this).addClass('selected');
+            $('#modal_add_install').closest('.x_panel').removeClass('datatables-error');
+            $('#modalInstall #datatables-install-error-status').empty().removeClass('my-error');   //.html('Selected: '+rdata['name']+'')
+            $('#modalInstall #install').val(rdata['id']);
+        }
+    } );	
+        	
 }
+
+
+function modal_add_install_datatables(){
+    modal_add_install.destroy()
+    $('#modalInstall #install').val('');
+    $('#modalInstall #datatables-error-status').empty()
     
+    $('#modal_add_install thead th').each( function () {
+        var title = $(this).text();
+        if(title=='Name'){
+            $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+        }
+    } );
+    
+	modal_add_install = $('#modal_add_install').DataTable({
+			"ajax": {
+				"url": "/media/installs",
+				"dataSrc": ""
+			},
+            "scrollY":        "125px",
+            "scrollCollapse": true,
+            "paging":         false,
+			"language": {
+				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+                "zeroRecords":    "No matching templates found",
+                "info":           "Showing _START_ to _END_ of _TOTAL_ templates",
+                "infoEmpty":      "Showing 0 to 0 of 0 templates",
+                "infoFiltered":   "(filtered from _MAX_ total templates)"
+			},
+			"rowId": "id",
+			"deferRender": true,
+			"columns": [
+				{ "data": "name"},
+                { "data": "vers"},
+				],
+			 "order": [[0, 'asc']],	
+             "pageLength": 10,	 
+	} );  
+
+    modal_add_install.columns().every( function () {
+        var that = this;
+ 
+        $( 'input', this.header() ).on( 'keyup change', function () {
+            if ( that.search() !== this.value ) {
+                that
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    } );
+    
+    $("#modalAddFromMedia #send").on('click', function(e){
+            var form = $('#modalAddFromMedia #modalAdd');
+            form.parsley().validate();
+            
+            if (form.parsley().isValid()){
+                install=$('#modalAddFromMedia #install').val();
+                //~ console.log('install:'+install+'XXX')
+                
+                //~ if (install !=''){console.log('install not empty')}else{console.log('install empty')}
+                
+                if (install !=''){
+                    data=$('#modalAddFromMedia  #modalAdd').serializeObject();
+                    socket.emit('domain_media_add',data)
+                }else{                
+                    //~ console.log('OK!!')
+                        $('#modal_add_install').closest('.x_panel').addClass('datatables-error');
+                        $('#modalAddFromMedia #datatables-install-error-status').html('No OS template selected').addClass('my-error');                    
+                }
+            }        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            //~ var form = $('#modalAddFromMedia #modalAdd');
+
+            //~ form.parsley().validate();
+
+            //~ if (form.parsley().isValid()){
+                //~ data=$('#modalAddFromMedia #modalAdd').serializeObject();
+                //~ data=replaceAlloweds_arrays(data)
+                //~ console.log(data)
+                //~ socket.emit('domain_media_add',data)
+            //~ }
+            
+
+        });    
+
+}
+
+

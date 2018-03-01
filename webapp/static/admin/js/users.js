@@ -36,14 +36,12 @@ $(document).ready(function() {
     $("#modalAddUser #send").on('click', function(e){
         var form = $('#modalAddUserForm');
         data=quota2dict($('#modalAddUserForm').serializeObject());
-        console.log(data)
         form.parsley().validate();
         if (form.parsley().isValid()){
             
             data=quota2dict($('#modalAddUserForm').serializeObject());
             delete data['password2']
             data['id']=data['username']=$('#modalAddUserForm #id').val();
-            console.log(data)
             socket.emit('user_add',data)
         }
     }); 
@@ -51,42 +49,38 @@ $(document).ready(function() {
     $("#modalEditUser #send").on('click', function(e){
         var form = $('#modalEditUserForm');
         data=quota2dict($('#modalEditUserForm').serializeObject());
-        console.log(data)
         form.parsley().validate();
         if (form.parsley().isValid()){
             
             data=quota2dict($('#modalEditUserForm').serializeObject());
             //~ delete data['password2']
             data['id']=data['username']=$('#modalEditUserForm #id').val();
-            console.log(data)
             socket.emit('user_edit',data)
         }
     }); 
 
-    $("#modalEditUser #send").on('click', function(e){
-        var form = $('#modalEditUserForm');
-        data=quota2dict($('#modalEditUserForm').serializeObject());
-        console.log(data)
-        form.parsley().validate();
-        if (form.parsley().isValid()){
+    //~ $("#modalEditUser #send").on('click', function(e){
+        //~ var form = $('#modalEditUserForm');
+        //~ data=quota2dict($('#modalEditUserForm').serializeObject());
+        //~ console.log(data)
+        //~ form.parsley().validate();
+        //~ if (form.parsley().isValid()){
             
-            data=quota2dict($('#modalEditUserForm').serializeObject());
-            delete data['password2']
-            data['id']=data['username']=$('#modalEditUserForm #id').val();
-            console.log(data)
-            socket.emit('user_edit',data)
-        }
-    }); 
+            //~ data=quota2dict($('#modalEditUserForm').serializeObject());
+            //~ delete data['password2']
+            //~ data['id']=data['username']=$('#modalEditUserForm #id').val();
+            //~ console.log(data)
+            //~ socket.emit('user_edit',data)
+        //~ }
+    //~ }); 
     
     $("#modalDeleteUser #send").on('click', function(e){
         var form = $('#modalDeleteUserForm');
         data=$('#modalDeleteUserForm').serializeObject();
-        console.log(data)
         form.parsley().validate();
         if (form.parsley().isValid()){
             
             data=quota2dict($('#modalDeleteUserForm').serializeObject());
-            console.log(data)
             socket.emit('user_delete',data)
         }
     }); 
@@ -115,7 +109,6 @@ $(document).ready(function() {
         header=lines[0].split(',')
         users=[]
         $.each(lines, function(n, l){
-            console.log(l.length)
             if(n!=0 && l.length > 10){
                 usr=toObject(header,l.split(','))
                 usr['id']=usr['username']
@@ -128,7 +121,6 @@ $(document).ready(function() {
     $("#modalAddBulkUsers #send").on('click', function(e){
         var form = $('#modalAddBulkUsersForm');
         form.parsley().validate();
-        console.log(parseCSV())
         
         if (form.parsley().isValid()){
             data=quota2dict($('#modalAddBulkUsersForm').serializeObject());
@@ -149,7 +141,6 @@ $(document).ready(function() {
 
 
     $("#edit-role").on('change', function(e){
-        console.log('role')
          setQuotaTableDefaults('#edit-users-quota','roles',$(this).val())
     });
     $("#edit-category").on('change', function(e){
@@ -229,7 +220,6 @@ $(document).ready(function() {
     //~ });
 
     $('#users').find('tbody').on('click', 'td.details-control', function () {
-        console.log('click')
         var tr = $(this).closest('tr');
         var row = table.row( tr );
  
@@ -247,7 +237,6 @@ $(document).ready(function() {
             //~ setQuotaOptions('#show-users-quota',true);
             //~ editData();
             tr.addClass('shown');
-            console.log(row.data().id)
             setQuotaDataDefaults('#show-users-quota',row.data())
         }
     });
@@ -349,7 +338,7 @@ function actionsUserDetail(){
                 $('#modalEditUserForm #category option:selected').prop("selected", false);
                 $('#modalEditUserForm #category option[value="'+user.category+'"]').prop("selected",true);
                 $('#modalEditUserForm #group option:selected').prop("selected", false);
-                $('#modalEditForm #group option[value="'+user.group+'"]').prop("selected",true);                
+                $('#modalEditUserForm #group option[value="'+user.group+'"]').prop("selected",true);                
             });
              //~ $('#hardware-block').hide();
             //~ $('#modalEdit').parsley();
@@ -359,7 +348,6 @@ function actionsUserDetail(){
 	$('.btn-delete').on('click', function () {
             //~ setQuotaOptions('#edit-users-quota');
             var pk=$(this).closest("div").attr("data-pk");
-            console.log('pk: '+pk)
             $("#modalDeleteUserForm")[0].reset();
 			$('#modalDeleteUser').modal({
 				backdrop: 'static',
@@ -410,7 +398,6 @@ function actionsUserDetail(){
 							},
 							stack: stack_center
 						}).get().on('pnotify.confirm', function() {
-                            console.log({'pk':pk,'name':name})
                             socket.emit('user_toggle',{'pk':pk,'name':name})
 						}).on('pnotify.cancel', function() {
                     });	
@@ -448,8 +435,6 @@ function renderUsersDetailPannel ( d ) {
     function setModalUser(){
         api.ajax_async('/admin/userschema','POST','').done(function(d) {
             $.each(d, function(key, value) {
-                console.log(key)
-                
                     $("." + key).find('option').remove().end();
                     for(var i in d[key]){
                         if(value[i].id!='disposables' && value[i].id!='eval'){

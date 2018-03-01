@@ -211,8 +211,6 @@ def hardware():
     dict['graphics']=app.isardapi.get_alloweds(current_user.username,'graphics',pluck=['id','name','description'],order='name')
     dict['videos']=app.isardapi.get_alloweds(current_user.username,'videos',pluck=['id','name','description'],order='name')
     dict['boots']=app.isardapi.get_alloweds(current_user.username,'boots',pluck=['id','name','description'],order='name')
-    import pprint
-    pprint.pprint(dict['boots'])
     dict['hypervisors_pools']=app.isardapi.get_alloweds(current_user.username,'hypervisors_pools',pluck=['id','name','description'],order='name')
     dict['forced_hyps']=[]
     if current_user.role == 'admin':
@@ -241,8 +239,6 @@ def domain_genealogy():
         gen_ids=app.isardapi.get_backing_ids(request.get_json(force=True)['pk'])
     except Exception as e:
         return json.dumps({'wasted':0,'free':0,'wasted_hs':0,'free_hs':0,'genealogy':[],'gen_ids':[]})
-        print(str(e))
-    #~ print(gen_ids)
     return json.dumps({'wasted':wasted,'free':gen[0]['virtual-size']-wasted,'wasted_hs':app.isardapi.human_size(wasted),'free_hs':app.isardapi.human_size(gen[0]['virtual-size']-wasted),'genealogy':gen_human,'gen_ids':gen_ids})
 
 @app.route('/domain_derivates', methods=['POST'])
@@ -276,10 +272,17 @@ def domain():
     # ~ except:
         # ~ return json.dumps([])
         
+        
 @app.route('/domain/alloweds', methods=['POST'])
 @login_required
 def domain_alloweds():
     return json.dumps(app.isardapi.f.unflatten_dict(app.isardapi.get_domain(request.get_json(force=True)['pk']))['allowed'])
+
+@app.route('/domain/alloweds/select2', methods=['POST'])
+@login_required
+def domain_alloweds_select2():
+    allowed=request.get_json(force=True)['allowed']
+    return json.dumps(app.isardapi.get_alloweds_select2(allowed))
         
 @app.route('/desktops/template',methods=['POST'])
 @login_required
@@ -461,6 +464,9 @@ def templateUpdate(id):
     # ~ else:
         # ~ return txt
 
-            
+
+
+
+           
         
         

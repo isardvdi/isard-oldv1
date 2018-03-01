@@ -46,7 +46,7 @@
 				{   // hypervisors_pools is not inside hardware (take it into account when editing!)
 					$(id+" #forced_hyp").append('<option value=' + value.id + '>' + value.hostname+' ('+value.status+')' + '</option>');
 				});
-                console.log(hardware.user['quota-hardware-memory'])
+                //~ console.log(hardware.user['quota-hardware-memory'])
 				$(id+" #hardware-memory").ionRangeSlider({
 						  type: "single",
 						  min: 500,
@@ -64,7 +64,7 @@
 						  }).data("ionRangeSlider").update();
                 if($(id+" #disk_size").length != 0) {
                     if(hardware.user['quota-domains-desktops_disk_max']/1000000>200){
-                        var dsize=80;}else{ var dsize=hardware.user['quota-domains-desktops_disk_max']/1000000;}
+                        var dsize=120;}else{ var dsize=hardware.user['quota-domains-desktops_disk_max']/1000000;}
                     $(id+" #disk_size").ionRangeSlider({
                               type: "single",
                               min: 1,

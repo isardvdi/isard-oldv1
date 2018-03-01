@@ -31,7 +31,8 @@ $(document).ready(function() {
                 $('#viewer_fields').show()
                 if( $('#modalAddHyper #hostname').val()!='' && $('#modalAddHyper #viewer_hostname').val()=='' && $('#modalAddHyper #viewer_nat_hostname').val()==''){
                     $('#modalAddHyper #viewer_hostname').val($('#modalAddHyper #hostname').val());
-                    $('#modalAddHyper #viewer_nat_hostname').val($('#modalAddHyper #hostname').val());                    
+                    $('#modalAddHyper #viewer_nat_hostname').val($('#modalAddHyper #hostname').val());
+                    $('#modalAddHyper #viewer_nat_offset').val(0);                       
                 }
                 
 
@@ -41,7 +42,8 @@ $(document).ready(function() {
             $('#modalAddHyper .capabilities_hypervisor').on('ifUnchecked', function(event){
                 $('#modalAddHyper #viewer_fields').hide()
                     $('#modalAddHyper #modalAddHyper #viewer_hostname').val('');
-                    $('#modalAddHyper #modalAddHyper #viewer_nat_hostname').val('');                 
+                    $('#modalAddHyper #modalAddHyper #viewer_nat_hostname').val('');
+                    $('#modalAddHyper #modalAddHyper #viewer_nat_offset').val(0);                   
             });
                         
 
@@ -241,7 +243,7 @@ $(document).ready(function() {
     });
 
     socket.on('add_form_result', function (data) {
-        console.log('received result')
+        //~ console.log('received result')
         var data = JSON.parse(data);
         if(data.result){
             $("#modalAddHyper #modalAdd")[0].reset();
@@ -457,7 +459,7 @@ function actionsHyperDetail(){
 			}).modal('show');
 
             api.ajax('/admin/tabletest/hypervisors/post','POST',{'id':pk}).done(function(hyp) {
-                console.log(hyp)
+                //~ console.log(hyp)
                 $('#modalEditHyper #modalEdit #id').val(pk);
                 $('#modalEditHyper #modalEdit #fake_id').val(pk);
                 $('#modalEditHyper #modalEdit #description').val(hyp.description);
@@ -474,6 +476,7 @@ function actionsHyperDetail(){
                 //~ $('#modalEditHyper #modalEdit #capabilities-hypervisor').val(hyp['capabilities']['hypervisor']);
                 $('#modalEditHyper #modalEdit #viewer_hostname').val(hyp.viewer_hostname);
                 $('#modalEditHyper #modalEdit #viewer_nat_hostname').val(hyp.viewer_nat_hostname);
+                $('#modalEditHyper #modalEdit #viewer_nat_offset').val(hyp.viewer_nat_offset);
                 
             });
            api.ajax('/admin/hypervisors_pools','GET','').done(function(pools) {

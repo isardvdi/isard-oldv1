@@ -137,6 +137,9 @@ class isardAdmin():
                                         
     def update_table_dict(self, table, id, dict):
         with app.app_context():
+            print(table)
+            print(id)
+            print(dict)
             return self.check(r.table(table).get(id).update(dict).run(db.conn), 'replaced')
             
     '''
@@ -200,8 +203,9 @@ class isardAdmin():
         # ~ 'quota': {'hardware': {'vcpus': 1, 'memory': 1000}, 
         # ~ 'domains': {'templates': 1, 'running': 1, 'isos': 1, 'desktops': 1}}}
         p = Password()
-        usr = {'kind': 'local',
-               'active': True,
+        #### Removed kind. Kind cannot be modified, so the update will 
+        #### not interfere with this field
+        usr = {'active': True,
                 'accessed': time.time()}
         user={**usr, **user}
         
@@ -550,11 +554,12 @@ class isardAdmin():
     '''
     MEDIA
     '''
-    def media_add(self,username,partial_dict):
+    def media_add(self,username,partial_dict,filename=False):
         try:
             partial_dict['url-web']=partial_dict['url']
             del partial_dict['url']
-            # ~ filename = partial_dict['url-web'].split('/')[-1]
+            if filename is False:
+                filename = partial_dict['url-web'].split('/')[-1]
             user_data=app.isardapi.user_relative_media_path( username, partial_dict['name'])
             partial_dict={**partial_dict, **user_data}
             missing_keys={  'accessed': time.time(),
@@ -580,6 +585,7 @@ class isardAdmin():
             dict={**partial_dict, **missing_keys}
             return self.insert_table_dict('media',dict)
         except Exception as e:
+            log.error(str(e))
             log.error('Exception error on media add')
             return False
         return False
@@ -591,7 +597,38 @@ class isardAdmin():
                     (r.args(dom['create_dict']['hardware']['isos'])['id'].eq(id) | r.args(dom['create_dict']['hardware']['floppies'])['id'].eq(id))
                 ).run(conn))
         # ~ return list(r.table("domains").filter({'create_dict':{'hardware':{'isos':id}}).pluck('id').run(db.conn))                    
-    
+
+
+    def media_upload(self,username,handler,media):
+        path='./uploads/'
+        filename = secure_filename(handler.filename)
+        handler.save(os.path.join(path+filename))        
+        
+        print('File saved')
+        return self.media_add(username,media,filename=filename)
+        
+        
+        
+        #~ media['id']=handler.filename
+        #~ filename = secure_filename(handler.filename)
+        #~ handler.save(os.path.join(path+filename))
+
+        #~ with app.app_context():
+            #~ r.table('media').insert(        
+        #~ return True
+        
+    def remove_backup_db(self,id):
+        with app.app_context():
+            dict=r.table('backups').get(id).run(db.conn)
+        path=dict['path']
+        try:
+            os.remove(path+id+'.tar.gz')
+        except OSError:
+            pass
+        with app.app_context():
+            r.table('backups').get(id).delete().run(db.conn)
+           
+           
     '''
     BACKUP & RESTORE
     '''
@@ -858,7 +895,7 @@ class isardAdmin():
                   'icon': icon,
                   'server': False,
                   'os': create_dict['builder']['id'],   #### Or name
-
+                  'options': {'viewers':{'spice':{'fullscreen':True}}},
                   'create_dict': create_dict, 
                   'hypervisors_pools': hyper_pools,
                   'allowed': {'roles': False,
@@ -883,6 +920,21 @@ class isardAdmin():
         if media['kind']=='floppy':
             create_dict['hardware']['isos']=[]
             create_dict['hardware']['floppies']=[{'id': create_dict['media']}]                                                                                           
+
+        if 'add_virtio_iso' in create_dict:
+            with app.app_context():
+                iso_virtio_id=list(r.table('media').has_fields('default-virtio-iso').pluck('id').run(db.conn))
+                print(iso_virtio_id)
+            if len(iso_virtio_id):
+                create_dict['hardware']['isos'].append({'id': iso_virtio_id[0]['id']})
+                create_dict.pop('add_virtio_iso',None)
+        if 'add_virtio_fd' in create_dict:
+            with app.app_context():
+                fd_virtio_id=list(r.table('media').has_fields('default-virtio-fd').pluck('id').run(db.conn))
+            if len(fd_virtio_id):
+                create_dict['hardware']['floppies'].append({'id': fd_virtio_id[0]['id']})
+                create_dict.pop('add_virtio_fd',None)
+            
         new_domain={'id': '_'+user+'_'+parsed_name,
                   'name': name,
                   'description': description,
@@ -896,7 +948,7 @@ class isardAdmin():
                   'icon': icon,
                   'server': False,
                   'os': create_dict['create_from_virt_install_xml'],   #### Or name
-
+                  'options': {'viewers':{'spice':{'fullscreen':True}}},
                   'create_dict': create_dict, 
                   'hypervisors_pools': hyper_pools,
                   'allowed': {'roles': False,
@@ -904,6 +956,10 @@ class isardAdmin():
                               'groups': False,
                               'users': False}}
         with app.app_context():
+            #~ import pprint
+            #~ pprint.pprint(new_domain)
+            #~ pprint.pprint(r.table('domains').insert(new_domain).run(db.conn))
+            #~ return True
             return self.check(r.table('domains').insert(new_domain).run(db.conn),'inserted')
 
     # ~ def isa_group_separator(self,line):
