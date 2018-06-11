@@ -77,6 +77,13 @@ class Wizard():
             self.run_server()
             
         else: # WIZARD NOT FORCED. SOMETHING IS NOT GOING AS EXPECTED WITH DATABASE?
+            wait_seconds=3
+            while wait_seconds > 0:
+                if not self.valid_rethinkdb():
+                    time.sleep(1)
+                    wait_seconds-=1
+                else:
+                    wait_seconds=0
             if not self.valid_rethinkdb():
                 wlog.error('Can not connect to rethinkdb database! Is it running?')
                 exit(1)
@@ -133,6 +140,14 @@ class Wizard():
                             r.table(k).insert(v).run()
                     self.insert_update('domains',[dom])
                     wlog.info('New download: '+u)
+
+        updates=['win7Virtio','win10Virtio','centos7.0','debian9','fedora26','ubuntu17.04','ubuntu16.10','winxp']
+        virt_installs=self.get_updates_new_kind('virt_install','admin')
+        for vi in virt_installs:
+            for u in updates:
+                if u == vi['id']:
+                    r.table('virt_install').insert(vi).run()
+                    wlog.info('New virt_install: '+u)                    
         # Useful default media with drivers for Microsfot
         #~ medias=self.get_updates_new_kind('media','admin')
         #~ for media in medias:
@@ -557,7 +572,7 @@ class Wizard():
             @self.wapp.route('/content', methods=['POST'])
             def wizard_content():
                 global html
-                remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+                remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
                 if request.method == 'POST':
                     step=request.form['step_number']
                     if step == '1':

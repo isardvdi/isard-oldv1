@@ -10,9 +10,12 @@ $(document).ready(function() {
 
     int_table=$('#interfaces').DataTable({
 			"ajax": {
-				"url": "/admin/table/interfaces/get",
-				"dataSrc": ""
+				"url": "/admin/tabletest/interfaces/post",
+                "contentType": "application/json",
+                "type": 'POST',
+                "data": function(d){return JSON.stringify({'order':'name','flatten':false})}
 			},
+            "sAjaxDataProp": "",
 			"language": {
 				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
 			},
@@ -32,18 +35,23 @@ $(document).ready(function() {
                 "className":      'actions-control',
                 "orderable":      false,
                 "data":           null,
-                "defaultContent": '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
-                                   <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
+                "defaultContent": '<button id="btn-alloweds" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-users" style="color:darkblue"></i></button>'
+                                   //~ <button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button>'
+                                   //~ <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
 				},                
                 ],
 			 "order": [[1, 'asc']]
     } );
 
     $('#interfaces').find(' tbody').on( 'click', 'button', function () {
+        console.log('data clicked')
         var data = int_table.row( $(this).parents('tr') ).data();
-        //~ switch($(this).attr('id')){
-            //~ case 'btn-play':        
-                //~ break;
+        switch($(this).attr('id')){
+            case 'btn-alloweds':        
+                modalAllowedsFormShow('interfaces',data)
+            break;
+                
+        }
     });
 
 	$('.add-new-interface').on( 'click', function () {
@@ -83,67 +91,18 @@ $(document).ready(function() {
             form.parsley().validate();
             data=$('#modalAddInterface').serializeObject();
             data=replaceAlloweds_arrays(data)
-            //~ socket.emit('domain_virtbuilder_add',data)
-            //~ if (form.parsley().isValid()){
-                //~ template=$('#modalAddDesktop #template').val();
-                //~ console.log('TEMPLATE:'+template)
-                //~ if (template !=''){
-                    //~ var queryString = $('#modalAdd').serialize();
-                    //~ data=$('#modalAdd').serializeObject();
-                    //~ socket.emit('domain_add',data)
-                //~ }else{
-                    //~ $('#modal_add_desktops').closest('.x_panel').addClass('datatables-error');
-                    //~ $('#modalAddDesktop #datatables-error-status').html('No template selected').addClass('my-error');
-                //~ }
-            //~ }
         });
-
-    // DISKS
-    disks_table=$('#disks').DataTable({
-			"ajax": {
-				"url": "/admin/table/disks/get",
-				"dataSrc": ""
-			},
-			"language": {
-				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
-			},
-			"rowId": "id",
-			"deferRender": true,
-			"columns": [
-				{
-                "className":      'details-control',
-                "orderable":      false,
-                "data":           null,
-                "defaultContent": '' //'<button class="btn btn-xs btn-info" type="button"  data-placement="top" ><i class="fa fa-plus"></i></button>'
-				},
-				{ "data": "name"},
-				{ "data": "description"},
-				{
-                "className":      'actions-control',
-                "orderable":      false,
-                "data":           null,
-                "defaultContent": '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
-                                   <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
-				},                
-                ],
-			 "order": [[1, 'asc']]
-    } );
-
-    $('#disks').find(' tbody').on( 'click', 'button', function () {
-        var data = int_table.row( $(this).parents('tr') ).data();
-        //~ console.log($(this).attr('id'),data);
-        //~ switch($(this).attr('id')){
-            //~ case 'btn-play':        
-                //~ break;
-    });
 
     
     // GRAPHICS
     graphics_table=$('#graphics').DataTable({
 			"ajax": {
-				"url": "/admin/table/graphics/get",
-				"dataSrc": ""
+				"url": "/admin/tabletest/graphics/post",
+                "contentType": "application/json",
+                "type": 'POST',
+                "data": function(d){return JSON.stringify({'order':'name','flatten':false})}
 			},
+            "sAjaxDataProp": "",
 			"language": {
 				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
 			},
@@ -162,19 +121,22 @@ $(document).ready(function() {
                 "className":      'actions-control',
                 "orderable":      false,
                 "data":           null,
-                "defaultContent": '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
-                                   <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
+                "defaultContent": '<button id="btn-alloweds" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-users" style="color:darkblue"></i></button>'
+                                    //~ '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
+                                   //~ <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
 				},                
                 ],
 			 "order": [[1, 'asc']]
     } );
 
     $('#graphics').find(' tbody').on( 'click', 'button', function () {
-        var data = int_table.row( $(this).parents('tr') ).data();
-        //~ console.log($(this).attr('id'),data);
-        //~ switch($(this).attr('id')){
-            //~ case 'btn-play':        
-                //~ break;
+        var data = graphics_table.row( $(this).parents('tr') ).data();
+        switch($(this).attr('id')){
+            case 'btn-alloweds':        
+                modalAllowedsFormShow('graphics',data)
+            break;
+                
+        }
     });
     
 	$('.add-new-graphics').on( 'click', function () {
@@ -212,9 +174,12 @@ $(document).ready(function() {
     // VIDEOS
     videos_table=$('#videos').DataTable({
 			"ajax": {
-				"url": "/admin/table/videos/get",
-				"dataSrc": ""
+				"url": "/admin/tabletest/videos/post",
+                "contentType": "application/json",
+                "type": 'POST',
+                "data": function(d){return JSON.stringify({'order':'name','flatten':false})}
 			},
+            "sAjaxDataProp": "",
 			"language": {
 				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
 			},
@@ -233,19 +198,22 @@ $(document).ready(function() {
                 "className":      'actions-control',
                 "orderable":      false,
                 "data":           null,
-                "defaultContent": '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
-                                   <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
+                "defaultContent": '<button id="btn-alloweds" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-users" style="color:darkblue"></i></button>'
+                                    //~ '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
+                                   //~ <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
 				},                
                 ],
 			 "order": [[1, 'asc']]
     } );
 
     $('#videos').find(' tbody').on( 'click', 'button', function () {
-        var data = int_table.row( $(this).parents('tr') ).data();
-        //~ console.log($(this).attr('id'),data);
-        //~ switch($(this).attr('id')){
-            //~ case 'btn-play':        
-                //~ break;
+        var data = videos_table.row( $(this).parents('tr') ).data();
+        switch($(this).attr('id')){
+            case 'btn-alloweds':        
+                modalAllowedsFormShow('videos',data)
+            break;
+                
+        }
     });
     
 	$('.add-new-videos').on( 'click', function () {
@@ -260,7 +228,7 @@ $(document).ready(function() {
 	});
 
     $("#modalVideos #send").on('click', function(e){
-            var form = $('#modalAddVideos');
+            var form = $('#modalAddVideos');print
             form.parsley().validate();
             data=$('#modalAddVideos').serializeObject();
             data=replaceAlloweds_arrays(data)
@@ -311,9 +279,12 @@ $(document).ready(function() {
     // VIDEOS
     boots_table=$('#boots').DataTable({
 			"ajax": {
-				"url": "/admin/table/boots/get",
-				"dataSrc": ""
+				"url": "/admin/tabletest/boots/post",
+                "contentType": "application/json",
+                "type": 'POST',
+                "data": function(d){return JSON.stringify({'order':'name','flatten':false})}
 			},
+            "sAjaxDataProp": "",
 			"language": {
 				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
 			},
@@ -332,37 +303,86 @@ $(document).ready(function() {
                 "className":      'actions-control',
                 "orderable":      false,
                 "data":           null,
-                "defaultContent": '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
-                                   <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
+                "defaultContent": '<button id="btn-alloweds" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-users" style="color:darkblue"></i></button>'
+                                    //~ '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button> \
+                                   //~ <button id="btn-edit" class="btn btn-xs btn-edit-interface" type="button"  data-placement="top" ><i class="fa fa-pencil" style="color:darkblue"></i></button>'
 				},                
                 ],
 			 "order": [[1, 'asc']]
     } );
-    
 
-    reconnect=-1;
-    socket = io.connect(location.protocol+'//' + document.domain + ':' + location.port+'/sio_users');
+    $('#boots').find(' tbody').on( 'click', 'button', function () {
+        var data = boots_table.row( $(this).parents('tr') ).data();
+        switch($(this).attr('id')){
+            case 'btn-alloweds':        
+                modalAllowedsFormShow('boots',data)
+            break;
+                
+        }
+    });    
+
+    // SocketIO
+    socket = io.connect(location.protocol+'//' + document.domain + ':' + location.port+'/sio_admins');
      
     socket.on('connect', function() {
         connection_done();
-        reconnect+=1;
-        if(reconnect){
-            console.log(reconnect+' reconnects to websocket. Refreshing datatables');
-            table.ajax.reload();
-            // Should have a route to update quota via ajax...
-        }
-        console.log('Listening users namespace');
+        socket.emit('join_rooms',['resources'])
+        console.log('Listening resources namespace');
     });
 
     socket.on('connect_error', function(data) {
       connection_lost();
     });
-    
-    socket.on('user_quota', function(data) {
-        console.log('Quota update')
-        var data = JSON.parse(data);
-        drawUserQuota(data);
+
+    socket.on('data', function(data){
+        //~ console.log('add or update')
+        var dict = JSON.parse(data);
+        switch(dict['table']){
+            case 'graphics':
+                dtUpdateInsert(graphics_table,dict['data'],false);
+                break;
+            case 'videos':
+                dtUpdateInsert(videos_table,dict['data'],false);
+                break;                
+            case 'interfaces':
+                dtUpdateInsert(int_table,dict['data'],false);
+                break;                    
+            case 'boots':
+                dtUpdateInsert(boots_table,dict['data'],false);
+                break;
+        }
     });
+
+    
+    socket.on('delete', function(data){
+        //~ console.log('delete')
+        var dict = JSON.parse(data);
+        data=dict['data']        
+        //~ var row = table.row('#'+data.id).remove().draw();
+        switch(dict['table']){
+            case 'graphics':
+                var row = graphics_table.row('#'+data.id).remove().draw();
+                break;
+            case 'videos':
+                var row = videos_table.row('#'+data.id).remove().draw();
+                break;                
+            case 'interfaces':
+                var row = int_table.row('#'+data.id).remove().draw();
+                break;                    
+            case 'boots':
+                var row = boots_table.row('#'+data.id).remove().draw();
+                break;
+        }        
+        new PNotify({
+                title: "Resource deleted",
+                text: "Resource "+data.name+" has been deleted",
+                hide: true,
+                delay: 4000,
+                icon: 'fa fa-success',
+                opacity: 1,
+                type: 'success'
+        });
+    });    
 
         
 });

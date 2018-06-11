@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Generate new js and css with gulp
 
 python3 gengulp.py

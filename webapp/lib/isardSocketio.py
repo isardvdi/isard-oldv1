@@ -36,7 +36,7 @@ class DomainsThread(threading.Thread):
     def run(self):
         starteddict={}
         with app.app_context():
-            for c in r.table('domains').without('xml','hardware','viewer').changes(include_initial=False).run(db.conn):
+            for c in r.table('domains').without('xml','viewer').changes(include_initial=False).run(db.conn):
                 #~ .pluck('id','kind','hyp_started','name','description','icon','status','user')
                 if self.stop==True: break
                 try:
@@ -185,11 +185,8 @@ class MediaThread(threading.Thread):
 
     def run(self):
         with app.app_context():
-            for c in r.table('domains').get_all(r.args(['Downloading','Downloaded']),index='status').pluck('id','name','description','icon','progress','status').merge({'table':'domains'}).changes(include_initial=False).union(
+            for c in r.table('domains').get_all(r.args(['Downloading','Downloaded']),index='status').pluck('id','name','description','icon','progress','status','user').merge({'table':'domains'}).changes(include_initial=False).union(
                     r.table('media').get_all(r.args(['DownloadStarting','Downloading','Downloaded']),index='status').merge({'table':'media'}).changes(include_initial=False)).run(db.conn):
-            
-            # ~ for c in r.table('media').changes(include_initial=False).run(db.conn):
-                #~ .pluck('id','percentage')
                 if self.stop==True: break
                 try:
                     if c['new_val'] is None:
@@ -199,6 +196,7 @@ class MediaThread(threading.Thread):
                         data=c['new_val']
                         event=c['new_val']['table']+'_data'
                     ## Admins should receive all updates on /admin namespace
+                    ## Users should receive not only their media updates, also the shared one's with them!
                     socketio.emit(event, 
                                     json.dumps(data), 
                                     namespace='/sio_users', 
@@ -208,7 +206,7 @@ class MediaThread(threading.Thread):
                                     namespace='/sio_users', 
                                     room='user_'+data['user'])                    
                     socketio.emit(event, 
-                                    json.dumps(data), #app.isardapi.f.flatten_dict(data)), 
+                                    json.dumps(data),
                                     namespace='/sio_admins', 
                                     room='media')
                 except Exception as e:
@@ -222,7 +220,46 @@ def start_media_thread():
         threads['media'].daemon = True
         threads['media'].start()
         log.info('MediaThread Started')
-        
+
+
+
+## MEDIA Threading
+class ResourcesThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.stop = False
+
+    def run(self):
+        with app.app_context():
+            for c in r.table('graphics').merge({'table':'graphics'}).changes(include_initial=False).union(
+                    r.table('videos').merge({'table':'videos'}).changes(include_initial=False).union(
+                    r.table('interfaces').merge({'table':'interfaces'}).changes(include_initial=False).union(
+                    r.table('boots').merge({'table':'boots'}).changes(include_initial=False)))).run(db.conn):
+                if self.stop==True: break
+                try:
+                    if c['new_val'] is None:
+                        data={'table':c['old_val']['table'],'data':c['old_val']}
+                        event='delete'
+                    else:
+                        data={'table':c['new_val']['table'],'data':c['new_val']}
+                        event='data'
+                    ## Admins should receive all updates on /admin namespace                  
+                    socketio.emit(event, 
+                                    json.dumps(data), #app.isardapi.f.flatten_dict(data)), 
+                                    namespace='/sio_admins', 
+                                    room='resources')                                  
+                except Exception as e:
+                    log.error('MediaThread error:'+str(e))
+
+def start_resources_thread():
+    global threads
+    if 'resources' not in threads: threads['resources']=None
+    if threads['resources'] is None:
+        threads['resources'] = ResourcesThread()
+        threads['resources'].daemon = True
+        threads['resources'].start()
+        log.info('ResourcesThread Started')    
+            
 ## Users Threading
 class UsersThread(threading.Thread):
     def __init__(self):
@@ -305,9 +342,9 @@ class HypervisorsThread(threading.Thread):
                                         room='hyper')  
                 except Exception as e:
                     log.error('HypervisorsThread error:'+str(e))
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    log.error(exc_type, fname, exc_tb.tb_lineno)
+                    #~ exc_type, exc_obj, exc_tb = sys.exc_info()
+                    #~ fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                    #~ log.error(exc_type, fname, exc_tb.tb_lineno)
                     
 def start_hypervisors_thread():
     global threads
@@ -466,7 +503,7 @@ def socketio_hyper_edit(form_data):
 @socketio.on('hyper_delete', namespace='/sio_admins')
 def socketio_hyper_delete(data):
     if current_user.role == 'admin': 
-        # ~ remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+        # ~ remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
         res=app.adminapi.hypervisor_delete(data['pk'])
         # ~ res=app.adminapi.update_table_dict('hypervisors',data['pk'],{'enabled':False,'status':'Deleting'}),
         if res is True:
@@ -481,7 +518,7 @@ def socketio_hyper_delete(data):
 @socketio.on('hyper_toggle', namespace='/sio_admins')
 def socketio_hyper_toggle(data):
     if current_user.role == 'admin': 
-        # ~ remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+        # ~ remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
         res=app.adminapi.hypervisor_toggle_enabled(data['pk'])
         if res is True:
             info=json.dumps({'result':True,'title':'Hypervisor enable/disable','text':'Hypervisor '+data['name']+' enable/disable success.','icon':'success','type':'success'})
@@ -495,7 +532,7 @@ def socketio_hyper_toggle(data):
 @socketio.on('hyper_domains_stop', namespace='/sio_admins')
 def socketio_hyper_domains_stop(data):
     if current_user.role == 'admin': 
-        # ~ remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+        # ~ remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
         res=app.adminapi.domains_stop(hyp_id=data['pk'],without_viewer=data['without_viewer'])
         if res is False:
             info=json.dumps({'result':False,'title':'Hypervisor domains stoping','text':'Domains in '+data['name']+' hypervisor could not be stopped now.!','icon':'warning','type':'error'}) 
@@ -575,7 +612,7 @@ def socketio_bulkuser_add(form_data):
 @socketio.on('user_toggle', namespace='/sio_admins')
 def socketio_user_toggle(data):
     if current_user.role == 'admin': 
-        # ~ remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+        # ~ remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
         res=app.adminapi.user_toggle_active(data['pk'])
         if res is True:
             info=json.dumps({'result':True,'title':'User enable/disable','text':'User '+data['name']+' enable/disable success.','icon':'success','type':'success'})
@@ -642,7 +679,7 @@ def socketio_domain_edit(form_data):
         #~ None
     create_dict=app.isardapi.f.unflatten_dict(form_data)
     create_dict=parseHardware(create_dict)
-    create_dict['create_dict']={'hardware':create_dict['hardware'].copy()}
+    create_dict['create_dict']['hardware']={**create_dict['hardware'], **create_dict['create_dict']['hardware']}
     create_dict.pop('hardware',None)
 
     if 'options' not in create_dict:
@@ -650,7 +687,7 @@ def socketio_domain_edit(form_data):
     else:
         if 'fullscreen' in create_dict['options']['viewers']['spice']:
             create_dict['options']['viewers']['spice']['fullscreen']=True
-                
+    
     res=app.isardapi.update_domain(create_dict.copy())
     if res is True:
         data=json.dumps({'id':create_dict['id'], 'result':True,'title':'Updated desktop','text':'Desktop '+create_dict['name']+' has been updated...','icon':'success','type':'success'})
@@ -660,10 +697,44 @@ def socketio_domain_edit(form_data):
                     data,
                     namespace='/sio_users', 
                     room='user_'+current_user.username)
+
+@socketio.on('domain_template_add', namespace='/sio_users')
+def socketio_domain_template_add(form_data):
+    #~ Check if user has quota and rights to do it
+    #~ if current_user.role=='admin':
+        #~ None
+        
+    #~ if float(app.isardapi.get_user_quotas(current_user.username)['tqp']) >= 100:
+        #~ flash('Quota for creating new templates is full','danger')
+        #~ return redirect(url_for('desktops'))
+    #~ # if app.isardapi.is_domain_id_unique
+    #~ original=app.isardapi.get_domain(form_data['id'])
+
+    partial_tmpl_dict=app.isardapi.f.unflatten_dict(form_data)
+    partial_tmpl_dict=parseHardware(partial_tmpl_dict)
+    partial_tmpl_dict['create_dict']['hardware']={**partial_tmpl_dict['hardware'], **partial_tmpl_dict['create_dict']['hardware']}
+    partial_tmpl_dict.pop('hardware',None)
+    from_id=partial_tmpl_dict['id']
+    partial_tmpl_dict.pop('id',None)
+
+    res=app.isardapi.new_tmpl_from_domain(from_id, partial_tmpl_dict, current_user.username)
+
+    #~ create_dict=app.isardapi.f.unflatten_dict(form_data)
+    #~ create_dict=parseHardware(create_dict)
+    #~ res=app.isardapi.new_domain_from_tmpl(current_user.username, create_dict)
+
+    if res is True:
+        data=json.dumps({'result':True,'title':'New template','text':'Template '+partial_tmpl_dict['name']+' is being created...','icon':'success','type':'success'})
+    else:
+        data=json.dumps({'result':False,'title':'New template','text':'Template '+partial_tmpl_dict['name']+' can\'t be created.','icon':'warning','type':'error'})
+    socketio.emit('add_form_result',
+                    data,
+                    namespace='/sio_users', 
+                    room='user_'+current_user.username)
                     
 @socketio.on('domain_update', namespace='/sio_users')
 def socketio_domains_update(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     socketio.emit('result',
                     app.isardapi.update_table_status(current_user.username, 'domains', data,remote_addr),
                     namespace='/sio_users', 
@@ -759,7 +830,7 @@ def parseHardware(create_dict):
     
 @socketio.on('domain_viewer', namespace='/sio_users')
 def socketio_domains_viewer(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     viewer_data=isardviewer.get_viewer(data,current_user,remote_addr)
     if viewer_data:
         socketio.emit('domain_viewer',
@@ -777,7 +848,7 @@ def socketio_domains_viewer(data):
 
 @socketio.on('disposable_viewer', namespace='/sio_disposables')
 def socketio_disposables_viewer(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     viewer_data=isardviewer.get_viewer(data,current_user,remote_addr)
     if viewer_data:
         socketio.emit('disposable_viewer',
@@ -800,7 +871,7 @@ def socketio_disposables_viewer(data):
     
     
     
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     if data['pk'].startswith('_disposable_'+remote_addr.replace('.','_')+'_'):
         send_viewer(data,kind='disposable',remote_addr=remote_addr)
     else:
@@ -866,7 +937,7 @@ MEDIA
 '''
 @socketio.on('media_update', namespace='/sio_admins')
 def socketio_admin_media_update(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     socketio.emit('result',
                     app.isardapi.update_table_status(current_user.username, 'media', data,remote_addr),
                     namespace='/sio_admins', 
@@ -875,7 +946,7 @@ def socketio_admin_media_update(data):
     
 @socketio.on('media_update', namespace='/sio_users')
 def socketio_media_update(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     socketio.emit('result',
                     app.isardapi.update_table_status(current_user.username, 'media', data,remote_addr),
                     namespace='/sio_users', 
@@ -979,7 +1050,7 @@ def socketio_domains_media_add(form_data):
 ## Disposables
 @socketio.on('connect', namespace='/sio_disposables')
 def socketio_disposables_connect():
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     if app.isardapi.show_disposable(remote_addr):
         join_room('disposable_'+remote_addr)
 
@@ -987,7 +1058,7 @@ def socketio_disposables_connect():
                                     
 @socketio.on('disposables_add', namespace='/sio_disposables')
 def socketio_disposables_add(data):
-    remote_addr=request.headers['X-Forwarded-For'] if 'X-Forwarded-For' in request.headers else request.remote_addr
+    remote_addr=request.headers['X-Forwarded-For'].split(',')[0] if 'X-Forwarded-For' in request.headers else request.remote_addr.split(',')[0]
     template=data['pk'] ##request.get_json(force=True)['pk']
     ## Checking permissions
     disposables = app.isardapi.show_disposable(remote_addr)
@@ -1025,11 +1096,11 @@ def socketio_admin_allowed_update(data):
 def socketio_allowed_update(data):
     res = app.adminapi.update_table_dict(data['table'], data['id'],{'allowed':data['allowed']})
     if res:
-        data=json.dumps({'result':True,'title':'Update permissions','text':'Permissions updated for '+data['id'],'icon':'success','type':'success'})
+        info=json.dumps({'result':data,'title':'Update permissions','text':'Permissions updated for '+data['id'],'icon':'success','type':'success'})
     else:
-        data=json.dumps({'result':True,'title':'Update permissions','text':'Something went wrong. Could not update permissions!','icon':'warning','type':'error'})
+        info=json.dumps({'result':False,'title':'Update permissions','text':'Something went wrong. Could not update permissions!','icon':'warning','type':'error'})
     socketio.emit('allowed_result',
-                    data,
+                    info,
                     namespace='/sio_users', 
                     room='user_'+current_user.username)
 

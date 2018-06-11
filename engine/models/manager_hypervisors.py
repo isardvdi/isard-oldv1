@@ -33,6 +33,7 @@ from engine.services.threads.download_thread import launch_thread_download_chang
 from engine.services.threads.threads import launch_try_hyps, set_domains_coherence, launch_thread_worker, \
     launch_disk_operations_thread, \
     launch_long_operations_thread
+from engine.services.lib.functions import clean_intermediate_status
 
 class ManagerHypervisors(object):
     def __init__(self, launch_threads=True, with_status_threads=True,
@@ -189,6 +190,7 @@ class ManagerHypervisors(object):
         def test_hyps_and_start_threads(self):
 
             l_hyps_to_test = get_hyps_with_status(list_status=['Error', 'Offline'], empty=True)
+
             dict_hyps_to_test = {d['id']: {'hostname': d['hostname'],
                                            'port': d['port'] if 'port' in d.keys() else 22,
                                            'user': d['user'] if 'user' in d.keys() else 'root'} for d in
@@ -238,6 +240,14 @@ class ManagerHypervisors(object):
             logs.main.info('starting thread: {} (TID {})'.format(self.name, self.tid))
             q = self.manager.q.background
             first_loop = True
+
+            clean_intermediate_status()
+
+            l_hyps_to_test = get_hyps_with_status(list_status=['Error', 'Offline'], empty=True)
+            while len(l_hyps_to_test) == 0:
+                logs.main.error('no hypervisor enable, waiting for one hypervisor')
+                sleep(0.5)
+                l_hyps_to_test = get_hyps_with_status(list_status=['Error', 'Offline'], empty=True)
 
             while self.manager.quit is False:
                 # ONLY FOR DEBUG
@@ -382,6 +392,13 @@ class ManagerHypervisors(object):
             logs.changes.info('starting thread: {} (TID {})'.format(self.name, self.tid))
             logs.changes.debug('^^^^^^^^^^^^^^^^^^^ DOMAIN CHANGES THREAD ^^^^^^^^^^^^^^^^^')
             ui = UiActions(self.manager)
+
+            # Test hypervisor disk operations
+            # Create Test disk in hypervisor disk operations
+            virtio_test_disk_relative_path = 'admin/admin/admin/virtio_testdisk.qcow2'
+            ui.creating_test_disk(test_disk_relative_route=virtio_test_disk_relative_path)
+
+
             self.r_conn = new_rethink_connection()
 
             cursor = r.table('domains').pluck('id', 'kind', 'status', 'detail').merge({'table': 'domains'}).changes().\

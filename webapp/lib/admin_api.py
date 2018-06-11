@@ -44,12 +44,15 @@ class isardAdmin():
         f=flatten()
         return f.unflatten_dict(dict)
         
-    def check_socket(host, port):
-        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-            if sock.connect_ex((host, port)) == 0:
-                return True
-            else:
-                return False
+    def check_socket(self, host, port):
+        try:
+            with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+                if sock.connect_ex((host, port)) == 0:
+                    return True
+                else:
+                    return False
+        except:
+            return False
                     
     '''
     ADMIN API
@@ -120,13 +123,19 @@ class isardAdmin():
                 data=r.table(table).run(db.conn)
                 return self.f.table_values_bstrap(data) if flatten else list(data)
 
-    def get_admin_table_term(self, table, field, value, pluck=False):
+    def get_admin_table_term(self, table, field, value, kind=False, pluck=False):
         with app.app_context():
-            if pluck:
-                return self.f.table_values_bstrap(r.table(table).filter(lambda doc: doc[field].match('(?i)'+value)).pluck(pluck).run(db.conn))
+            if kind:
+                if pluck:
+                    return self.f.table_values_bstrap(r.table(table).get_all(kind, index='kind').filter(lambda doc: doc[field].match('(?i)'+value)).pluck(pluck).run(db.conn))
+                else:
+                    return self.f.table_values_bstrap(r.table(table).get_all(kind, index='kind').filter(lambda doc: doc[field].match('(?i)'+value)).run(db.conn))
             else:
-                return self.f.table_values_bstrap(r.table(table).filter(lambda doc: doc[field].match('(?i)'+value)).run(db.conn))
-
+                if pluck:
+                    return self.f.table_values_bstrap(r.table(table).filter(lambda doc: doc[field].match('(?i)'+value)).pluck(pluck).run(db.conn))
+                else:
+                    return self.f.table_values_bstrap(r.table(table).filter(lambda doc: doc[field].match('(?i)'+value)).run(db.conn))
+                
     def insert_table_dict(self, table, dict):
         with app.app_context():
             return self.check(r.table(table).insert(dict).run(db.conn), 'inserted')
@@ -136,11 +145,11 @@ class isardAdmin():
             return r.table(table).insert(dict, conflict='update').run(db.conn)
                                         
     def update_table_dict(self, table, id, dict):
-        with app.app_context():
-            print(table)
-            print(id)
-            print(dict)
-            return self.check(r.table(table).get(id).update(dict).run(db.conn), 'replaced')
+        # ~ with app.app_context():
+            # ~ print(table)
+            # ~ print(id)
+            # ~ print(dict)
+        return self.check(r.table(table).get(id).update(dict).run(db.conn), 'replaced')
             
     '''
     USERS
@@ -161,11 +170,17 @@ class isardAdmin():
             user['quota']['domains'][k]=int(v)
         for k,v in user['quota']['hardware'].items():
             user['quota']['hardware'][k]=int(v)     
-        user['quota']['hardware']['memory']=user['quota']['hardware']['memory']*1000                    
-        qdomains ={'desktops_disk_max': 99999999,  # 100GB
-                    'templates_disk_max': 99999999,
-                    'isos_disk_max': 99999999}
-        user['quota']['domains']={**qdomains, **user['quota']['domains']}       
+        user['quota']['hardware']['memory']=user['quota']['hardware']['memory']*1000 
+        
+        with app.app_context():  
+            qdomains=r.table('roles').get(user['role']).run(db.conn)['quota']['domains']
+        user['quota']['domains']={**qdomains, **user['quota']['domains']} 
+        
+        
+        # ~ qdomains ={'desktops_disk_max': 99999999,  # 100GB
+                    # ~ 'templates_disk_max': 99999999,
+                    # ~ 'isos_disk_max': 99999999}
+        # ~ user['quota']['domains']={**qdomains, **user['quota']['domains']}       
 
         return self.check(r.table('users').insert(user).run(db.conn),'inserted')
 
@@ -311,32 +326,32 @@ class isardAdmin():
         with app.app_context():
             if 'template' in kind:
                 if not id:
-                    return list(r.table("domains").get_all(r.args(['public_template','user_template']),index='kind').without('xml','hardware','history_domain').merge(lambda domain:
+                    return list(r.table("domains").get_all(r.args(['public_template','user_template']),index='kind').without('xml','history_domain').merge(lambda domain:
                         {
                             "derivates": r.table('domains').filter({'create_dict':{'origin':domain['id']}}).count()
                         }
                     ).run(db.conn))
                 if id:
-                    return list(r.table("domains").get(id).without('xml','hardware','history_domain').merge(lambda domain:
+                    return list(r.table("domains").get(id).without('xml','history_domain').merge(lambda domain:
                         {
                             "derivates": r.table('domains').filter({'create_dict':{'origin':domain['id']}}).count()
                         }
                     ).run(db.conn))
             elif kind == 'base':
                 if not id:
-                    return list(r.table("domains").get_all(kind,index='kind').without('xml','hardware','history_domain').merge(lambda domain:
+                    return list(r.table("domains").get_all(kind,index='kind').without('xml','history_domain').merge(lambda domain:
                         {
                             "derivates": r.table('domains').filter({'create_dict':{'origin':domain['id']}}).count()
                         }
                     ).run(db.conn))
                 if id:
-                    return list(r.table("domains").get(id).without('xml','hardware','history_domain').merge(lambda domain:
+                    return list(r.table("domains").get(id).without('xml','history_domain').merge(lambda domain:
                         {
                             "derivates": r.table('domains').filter({'create_dict':{'origin':domain['id']}}).count()
                         }
                     ).run(db.conn))                
             else:
-               return list(r.table("domains").get_all(kind,index='kind').without('xml','hardware').merge(lambda domain:
+               return list(r.table("domains").get_all(kind,index='kind').without('xml').merge(lambda domain:
                     {
                         #~ "derivates": r.table('domains').filter({'create_dict':{'origin':domain['id']}}).count(),
                         "accessed": domain['history_domain'][0]['when'].default(0)
@@ -563,7 +578,7 @@ class isardAdmin():
             user_data=app.isardapi.user_relative_media_path( username, partial_dict['name'])
             partial_dict={**partial_dict, **user_data}
             missing_keys={  'accessed': time.time(),
-                            'detail': 'User added',
+                            'detail': 'Downloaded from website',
                             'icon': 'fa-circle-o' if partial_dict['kind']=='iso' else 'fa-floppy-o',
                             'progress': {
                                 "received":  "0" ,
@@ -590,6 +605,48 @@ class isardAdmin():
             return False
         return False
 
+    def media_upload(self,username,handler,media):
+        path='./uploads/'
+        
+        media['id']=handler.filename
+        filename = secure_filename(handler.filename)
+        handler.save(os.path.join(path+filename))
+
+        id='_'+username+'_'+app.isardapi.parse_string(media['name'])
+        name=media['name']
+        try:
+            user_data=app.isardapi.user_relative_media_path( username, filename)
+            media={**media, **user_data}
+            media['id']=id
+            media['name']=name
+            missing_keys={  'accessed': time.time(),
+                            'detail': 'Uploaded from local',
+                            'icon': 'fa-circle-o' if media['kind']=='iso' else 'fa-floppy-o',
+                            'progress': {
+                                "received":  "0" ,
+                                "received_percent": 0 ,
+                                "speed_current":  "" ,
+                                "speed_download_average":  "" ,
+                                "speed_upload_average":  "" ,
+                                "time_left":  "" ,
+                                "time_spent":  "" ,
+                                "time_total":  "" ,
+                                "total":  "" ,
+                                "total_percent": 0 ,
+                                "xferd":  "0" ,
+                                "xferd_percent":  "0"
+                                },
+                            'status': 'DownloadStarting',
+                            'url-isard': False,
+                            }
+            dict={**media, **missing_keys}
+            return self.insert_table_dict('media',dict)
+        except Exception as e:
+            log.error(str(e))
+            log.error('Exception error on media add')
+            return False
+        return False
+
 
     def media_domains_used():
         return list(r.table('domains').filter(
@@ -597,26 +654,7 @@ class isardAdmin():
                     (r.args(dom['create_dict']['hardware']['isos'])['id'].eq(id) | r.args(dom['create_dict']['hardware']['floppies'])['id'].eq(id))
                 ).run(conn))
         # ~ return list(r.table("domains").filter({'create_dict':{'hardware':{'isos':id}}).pluck('id').run(db.conn))                    
-
-
-    def media_upload(self,username,handler,media):
-        path='./uploads/'
-        filename = secure_filename(handler.filename)
-        handler.save(os.path.join(path+filename))        
-        
-        print('File saved')
-        return self.media_add(username,media,filename=filename)
-        
-        
-        
-        #~ media['id']=handler.filename
-        #~ filename = secure_filename(handler.filename)
-        #~ handler.save(os.path.join(path+filename))
-
-        #~ with app.app_context():
-            #~ r.table('media').insert(        
-        #~ return True
-        
+       
     def remove_backup_db(self,id):
         with app.app_context():
             dict=r.table('backups').get(id).run(db.conn)
@@ -924,16 +962,24 @@ class isardAdmin():
         if 'add_virtio_iso' in create_dict:
             with app.app_context():
                 iso_virtio_id=list(r.table('media').has_fields('default-virtio-iso').pluck('id').run(db.conn))
-                print(iso_virtio_id)
+                #~ print(iso_virtio_id)
             if len(iso_virtio_id):
                 create_dict['hardware']['isos'].append({'id': iso_virtio_id[0]['id']})
                 create_dict.pop('add_virtio_iso',None)
-        if 'add_virtio_fd' in create_dict:
-            with app.app_context():
-                fd_virtio_id=list(r.table('media').has_fields('default-virtio-fd').pluck('id').run(db.conn))
-            if len(fd_virtio_id):
-                create_dict['hardware']['floppies'].append({'id': fd_virtio_id[0]['id']})
-                create_dict.pop('add_virtio_fd',None)
+            
+            create_dict['hardware']['disks'].append({'file':'admin/admin/admin/virtio_testdisk.qcow2',
+                                                'readonly':True,
+                                                'type_path': 'media',
+                                                'bus':'virtio'
+                                                })   # 15G as a format    
+        #~ import pprint
+        #~ pprint.pprint(create_dict)
+        #~ if 'add_virtio_fd' in create_dict:
+            #~ with app.app_context():
+                #~ fd_virtio_id=list(r.table('media').has_fields('default-virtio-fd').pluck('id').run(db.conn))
+            #~ if len(fd_virtio_id):
+                #~ create_dict['hardware']['floppies'].append({'id': fd_virtio_id[0]['id']})
+                #~ create_dict.pop('add_virtio_fd',None)
             
         new_domain={'id': '_'+user+'_'+parsed_name,
                   'name': name,
@@ -948,13 +994,14 @@ class isardAdmin():
                   'icon': icon,
                   'server': False,
                   'os': create_dict['create_from_virt_install_xml'],   #### Or name
-                  'options': {'viewers':{'spice':{'fullscreen':True}}},
+                  'options': {'viewers':{'spice':{'fullscreen':False}}},
                   'create_dict': create_dict, 
                   'hypervisors_pools': hyper_pools,
                   'allowed': {'roles': False,
                               'categories': False,
                               'groups': False,
                               'users': False}}
+        #~ pprint.pprint(new_domain['create_dict'])
         with app.app_context():
             #~ import pprint
             #~ pprint.pprint(new_domain)

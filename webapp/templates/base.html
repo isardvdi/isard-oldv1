@@ -9,20 +9,19 @@
     <meta http-equiv="no-cache">
     <meta http-equiv="Expires" content="-1">
     <meta http-equiv="Cache-Control" content="no-cache">
-    <meta id="user-data" data-role="{{ current_user.role }}">
+    <meta id="user_data" data-userid="{{ current_user.id }}"  data-role="{{ current_user.role }}">
 
     <title>{{ title }} | Isard VDI</title>
     <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />
     
     
-<!--
     <link href="/static/build/isard-user.css" rel="stylesheet">
     {% if current_user.role == 'admin' %}
         <link href="/static/build/isard-admin.css" rel="stylesheet">
     {% endif%}
--->
     
+<!--
     <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <link href="/font-linux/font-linux.css" rel="stylesheet">
@@ -39,6 +38,7 @@
     <link href="/static/isard.css" rel="stylesheet">
 
     <link href="/vendors/dropzone/dist/min/dropzone.min.css" rel="stylesheet">
+-->
 
 
 
@@ -88,10 +88,9 @@
 	  </div>
 	</div>
 
-<!--
     <script src="/static/build/isard-user.js"></script>
--->
 
+<!--
     <script src="/vendors/jquery/dist/jquery.js"></script>
     <script src="/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="/vendors/nprogress/nprogress.js"></script>
@@ -152,6 +151,7 @@
     <script src="/static/admin/js/roles.js"></script>
     <script src="/static/admin/js/categories.js"></script>
     <script src="/static/admin/js/groups.js"></script>
+-->
     
     
 	{% include 'flash_messages.html' %}

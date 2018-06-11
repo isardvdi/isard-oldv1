@@ -11,7 +11,7 @@ $(document).ready(function() {
      
     socket.on('connect', function() {
         connection_done();
-        socket.emit('join_rooms',['media'])
+        socket.emit('join_rooms',['media','domains'])
         console.log('Listening media namespace');
     });
 
@@ -27,10 +27,9 @@ $(document).ready(function() {
 
 
 
-
     table['domains']=$('#domains_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/domains",
+				"url": "/admin/updates/domains/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -107,11 +106,20 @@ $(document).ready(function() {
 							}}],
 
                 "initComplete": function(settings, json){
-                     socket.on('domains_data', function(data){
+                    socket.on('desktop_data', function(data){
                         var data = JSON.parse(data);
-                            //~ console.log(data['progress-received_percent'])
-                        dtUpdateInsert(table['domains'],data,false);
-                    });                   
+                        if(data['id'].includes('_downloaded_')){
+                            dtUpdateInsert(table['domains'],data,false);
+                            //~ setDomainDetailButtonsStatus(data.id, data.status);
+                        }
+                    });
+
+                    socket.on('desktop_delete', function(data){
+                        var data = JSON.parse(data);
+                        if(data['id'].includes('_downloaded_')){
+                            var row = table['domains'].row('#'+data.id).remove().draw();
+                        }
+                    });                
                 }                            
                             
                             
@@ -148,7 +156,7 @@ $(document).ready(function() {
 
     table['media']=$('#media_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/media",
+				"url": "/admin/updates/media/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -220,13 +228,16 @@ $(document).ready(function() {
                                 return full.status;                                
 							}}],
                 "initComplete": function(settings, json){
-                     socket.on('media_data', function(data){
-                         console.log('media data received')
-                        //~ console.log('add or update')
+                    socket.on('media_data', function(data){
                         var data = JSON.parse(data);
-                            //~ console.log('media update')
-                        dtUpdateInsert(table['media'],data,false);
-                    });                   
+                            dtUpdateOnly(table['media'],data);
+                    });
+
+                    socket.on('media_delete', function(data){
+                        var data = JSON.parse(data);
+                        var row = table['media'].row('#'+data.id).remove().draw();
+                    });                    
+                                      
                 }
                             
                             
@@ -264,7 +275,7 @@ $(document).ready(function() {
     
     table['builders']=$('#builders_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/builders",
+				"url": "/admin/updates/builders/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -337,7 +348,7 @@ $(document).ready(function() {
     
     table['virt_builder']=$('#virt_builder_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/virt_builder",
+				"url": "/admin/updates/virt_builder/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -410,7 +421,7 @@ $(document).ready(function() {
     
     table['virt_install']=$('#virt_install_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/virt_install",
+				"url": "/admin/updates/virt_install/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -478,7 +489,7 @@ $(document).ready(function() {
 
     table['videos']=$('#videos_tbl').DataTable({
 			"ajax": {
-				"url": "/admin/updates/videos",
+				"url": "/admin/updates/videos/",
 				"dataSrc": ""
 			},
 			"language": {
@@ -563,6 +574,59 @@ $(document).ready(function() {
           //~ console.log(id)
      
     //~ })
+
+
+    table['viewers']=$('#viewers_tbl').DataTable({
+			"ajax": {
+				"url": "/admin/updates/viewers/",
+				"dataSrc": ""
+			},
+			"language": {
+				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+                "emptyTable": "No updates available"
+			},
+			"rowId": "id",
+			"deferRender": true,
+			"columns": [
+                //~ {"data": null,
+                 //~ 'defaultContent': ''},
+				{"data": "icon"},
+				{"data": "name"},
+                {"data": null,
+                 'defaultContent': ''},                               
+                ],
+			 "order": [[0, 'asc'],[1,'desc'],[2,'asc']],
+			 "columnDefs": [
+                            //~ {
+							//~ "targets": 0,
+							//~ "render": function ( data, type, full, meta ) {
+                                //~ if(full['new']){
+                                    //~ return '<span class="label label-success pull-right">New</span>';
+                                //~ }else{
+                                    //~ return '<span class="label label-info pull-right">Downloaded</span>';
+                                //~ }
+							//~ }},
+                            {
+							"targets": 0,
+							"render": function ( data, type, full, meta ) {
+                                return renderIcon(full)
+							}},
+                            {
+							"targets": 1,
+							"render": function ( data, type, full, meta ) {
+                                return renderName(full)
+							}},
+                            {
+							"targets": 2,
+							"render": function ( data, type, full, meta ) {
+                                //~ console.log(full.status+' '+full.id)
+                                //~ if(full['new']){
+                                    return '<a href="'+full['url-web']+'"><button id="btn-download" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-download" style="color:darkblue"></i></button></a>'
+                                //~ }else{
+                                    //~ return '<button id="btn-delete" class="btn btn-xs" type="button"  data-placement="top" ><i class="fa fa-times" style="color:darkred"></i></button>'
+                                //~ } 
+							}}]
+    } );
  
 });
 
