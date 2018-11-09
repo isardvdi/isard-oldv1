@@ -125,6 +125,7 @@ Import all views
 #~ else:
 if True:
     from .views import LoginViews
+    from .views import PxeViews    
     from .views import DesktopViews
     from .views import TemplateViews
     from .views import MediaViews
