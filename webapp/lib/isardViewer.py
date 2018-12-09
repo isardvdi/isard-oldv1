@@ -6,11 +6,8 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-import random, queue
-from threading import Thread
-import time, json, sys
+import sys
 from webapp import app
-from flask_login import current_user
 import rethinkdb as r
 from ..lib.log import * 
 
@@ -19,8 +16,6 @@ db = RethinkDB(app)
 db.init_app(app)
 
 from .admin_api import flatten
-from ..auth.authentication import Password  
-
 from netaddr import IPNetwork, IPAddress 
 
 class isardViewer():
@@ -40,17 +35,42 @@ class isardViewer():
 
 
     def send_viewer(self,data,kind='domain',remote_addr=False): 
-        if data['kind'] == 'file':
-            consola=self.get_viewer_ticket(data['pk'],remote_addr=remote_addr)
-            return {'kind':data['kind'],'ext':consola[0],'mime':consola[1],'content':consola[2]}
-        elif data['kind'] == 'xpi' or data['kind'] == 'html5':
+		if data['kind'] == 'spice-html5':
             viewer=self.get_spice_xpi(data['pk'],remote_addr=remote_addr)
             if viewer is not False:
                 if viewer['port']:
                     viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
                     viewer['port'] = "5"+ viewer['port']
-                return {'kind':data['kind'],'viewer':viewer}             
-        return False
+                url='http://'+viewer.host+'/?host='+viewer.host+'&port='+viewer.port+'&passwd='+viewer.passwd
+                return {'kind':'url','viewer':url}  			
+		if data['kind'] == 'spice-client':
+            consola=self.get_viewer_ticket(data['pk'],remote_addr=remote_addr,data['os'])
+            return {'kind':'file','ext':consola[0],'mime':consola[1],'content':consola[2]}	
+            		
+		if data['kind'] == 'vnc-html5':
+            viewer=self.get_spice_xpi(data['pk'],remote_addr=remote_addr)
+            if viewer is not False:
+                if viewer['port']:
+                    viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
+                    viewer['port'] = "5"+ viewer['port']
+                url='http://'+viewer.host+':82/?host='+viewer.host+'&port='+viewer.port+'&password='+viewer.passwd
+                return {'kind':'url','viewer':url}  			
+		if data['kind'] == 'vnc-client':
+            consola=self.get_viewer_ticket(data['pk'],remote_addr=remote_addr,data['os'])
+            return {'kind''file','ext':consola[0],'mime':consola[1],'content':consola[2]}
+            			
+			
+        # ~ if data['kind'] == 'file':
+            # ~ consola=self.get_viewer_ticket(data['pk'],remote_addr=remote_addr)
+            # ~ return {'kind':data['kind'],'ext':consola[0],'mime':consola[1],'content':consola[2]}
+        # ~ elif data['kind'] == 'xpi' or data['kind'] == 'html5':
+            # ~ viewer=self.get_spice_xpi(data['pk'],remote_addr=remote_addr)
+            # ~ if viewer is not False:
+                # ~ if viewer['port']:
+                    # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
+                    # ~ viewer['port'] = "5"+ viewer['port']
+                # ~ return {'kind':data['kind'],'viewer':viewer}             
+        # ~ return False
 
 
 

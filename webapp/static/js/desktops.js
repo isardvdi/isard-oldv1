@@ -196,7 +196,7 @@ $(document).ready(function() {
 				});	
                 break;
             case 'btn-display':
-                getClientViewer(data,socket);
+                chooseViewer(data,socket);
                 break;
         }
     });
