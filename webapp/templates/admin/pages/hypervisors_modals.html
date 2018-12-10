@@ -623,4 +623,73 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalEditViewer" tabindex="-1" role="dialog" 
+     aria-labelledby="modalEditViewer" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">   
+                <button type="button" class="close" 
+                   data-dismiss="modal">
+                       <span aria-hidden="true">&times;</span>
+                       <span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title" id="modalAddPool">
+                    <i class="fa fa-plus fa-1x"> </i> <i class="fa fa-object-group"> </i>   Edit pool viewer
+                </h4>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body">
+              <form id="modalEdit" class="form-horizontal form-label-left" action="{{ url_for('hypervisors_pools_get') }}" method="POST" novalidate>
+                      <div class="x_panel">
+                             <div class="x_title">
+                                <h2>Viewer<small></small></h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                   <li class="pull-right"><a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                                   </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                             </div>
+                             <div class="x_content"> 
+                            <div class="item form-group">
+                                <label>Mode:</label>
+                                <select class="form-control" id="viewer-defaultMode" name="viewer-defaultMode">
+                                <option value="Secure" selected="selected">Secure</option>
+                                <option value="Insecure" >Insecure</option>
+                                </select>
+                            </div>  
+                             <div class="item form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="viewer-domain">Domain
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                   <input id="viewer-domain" class="form-control col-md-7 col-xs-12" data-validate-length-range="4,40" name="viewer-domain" placeholder="domain.com" type="text">
+                                </div>
+                             </div>
+                             <div class="item form-group">
+                                <label class="control-label col-md-3 col-sm-3 col-xs-12" for="viewer-certificate">Certificate
+                                </label>
+                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                   <textarea id="viewer-certificate" name="viewer-certificate" placeholder="Paste it from BEGIN to END included." class="form-control col-md-7 col-xs-12"></textarea>
+                                </div>
+                             </div>
+                        </div>
+                      </div>
+
+               </div>
+                       
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                     <div class="form-group">
+                        <div class="col-md-6 col-md-offset-3">
+                           <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                           <button id="send" type="submit" class="btn btn-success">Update pool viewer</button>
+                        </div>
+                     </div>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 

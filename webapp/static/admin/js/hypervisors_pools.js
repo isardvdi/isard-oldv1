@@ -213,12 +213,32 @@ $(document).ready(function() {
 				});
 			}
             if(data['viewer']['certificate'].length >10){data['viewer']['certificate']='Yes';}
-            $('#hyper-pools-viewer-'+data.id+' tbody').append('<tr><td>'+data['viewer']['defaultMode']+'</td><td>'+data['viewer']['domain']+'</td><td>'+data['viewer']['certificate']+'</td></tr>');
+            $('#hyper-pools-viewer-'+data.id+' tbody').append('<tr><td>'+data['viewer']['defaultMode']+'</td><td>'+data['viewer']['domain']+'</td><td>'+data['viewer']['certificate']+'</td> \
+                <td><button class="btn btn-xs btn-viewer-pool-edit" data-pk="'+data.id+'" type="button" ><i class="fa fa-pencil" style="color:darkblue"></i></button></td> \
+                </tr>');
             tr.addClass('shown');
+            
+            $('.btn-viewer-pool-edit').on('click', function(){
+                pk=$(this).attr("data-pk");
+                //~ setHardwareDomainDefaults('#modalEditDesktop',pk);
+                $("#modalEditViewer #modalEdit")[0].reset();
+                $('#modalEditViewer').modal({
+                    backdrop: 'static',
+                    keyboard: false
+                }).modal('show');
+                 //~ $('#hardware-block').hide();
+                //~ $('#modalEdit').parsley();
+                //~ modal_edit_desktop_datatables(pk);               
+            });
         }
     } );
 
+
+
+    
 });// document ready
+
+
 
 
 function formatHypervisorPool ( d ) {

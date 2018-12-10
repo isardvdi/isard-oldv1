@@ -246,7 +246,10 @@ class isardViewer():
         if not dict: return False
         
         # Options
-        op_fscr = 1 if dict['options'] is not False and dict['options']['fullscreen'] else 0
+        try:
+            op_fscr = 1 if dict['options'] is not False and dict['options']['fullscreen'] else 0
+        except:
+            op_fscr = 0
         
         hostname=dict['host']
         if not dict['tlsport']:
