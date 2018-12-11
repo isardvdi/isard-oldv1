@@ -783,8 +783,7 @@ class Populate(object):
             return txt.replace(" ", "_")
 
     def _secure_viewer(self):
-        cert_file='install/viewer-certs/ca-cert.pem'
-        cert_file=''
+        cert_file='/certs/ca-cert.pem'
         try:
             with open(cert_file, "r") as caFile:
                 ca=caFile.read()
@@ -794,6 +793,7 @@ class Populate(object):
                                 'certificate':ca,
                                 'domain':cert.get_issuer().organizationName}
         except Exception as e:
+            log.error(str(e))
             log.warning('Using insecure viewer. Non ssl encrypted!')
             return {'defaultMode':'Insecure',
                                 'certificate':'',

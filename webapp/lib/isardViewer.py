@@ -41,7 +41,7 @@ class isardViewer():
                 # ~ if viewer['port']:
                     # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
                     # ~ viewer['port'] = "5"+ viewer['port']
-                url='http://'+viewer['host']+'/?host='+viewer['host']+'&port='+viewer['wsport']+'&passwd='+viewer['passwd']
+                url='/wsviewer/eyeos/?host='+viewer['host']+'&port='+viewer['wsport']+'&passwd='+viewer['passwd']
                 return {'kind':'url','viewer':url} 
                                      
         if data['kind'] == 'spice-client':
@@ -52,10 +52,7 @@ class isardViewer():
         if data['kind'] == 'vnc-html5':
             viewer = self.get_domain_vnc_data(data['pk'],remote_addr=remote_addr)
             if viewer is not False:
-                # ~ if viewer['port']:
-                    # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
-                    # ~ viewer['port'] = str(int(viewer['port'])-200)
-                url='http://'+viewer['host']+':82/?host='+viewer['host']+'&port='+viewer['wsport']+'&password='+viewer['passwd']
+                url='/wsviewer/novnclite/?host='+viewer['host']+'&port='+viewer['wsport']+'&password='+viewer['passwd']
                 return {'kind':'url','viewer':url}   
                                    
         if data['kind'] == 'vnc-client':
@@ -298,13 +295,13 @@ class isardViewer():
         tls-ciphers=DEFAULT
         """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, id, c)
 
-            consola = consola + """;host-subject=O=%s,CN=%s
+            consola = consola + """host-subject=C=CA,O=%s,CN=%s
         ca=%r
         toggle-fullscreen=shift+f11
         release-cursor=shift+f12
         secure-attention=ctrl+alt+end
         secure-channels=main;inputs;cursor;playback;record;display;usbredir;smartcard""" % (
-            'host-subject', 'hostname', dict['ca'])
+            'localdomain', '*.localdomain', dict['ca'])
 
         consola = consola.replace("'", "")
         return 'vv','application/x-virt-viewer',consola

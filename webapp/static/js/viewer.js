@@ -104,7 +104,7 @@ function startClientViewerSocket(socket){
         var data = JSON.parse(data);
         if(data['kind']=='url'){
             viewer=data['viewer']
-            window.open(viewer);            
+            window.open(location.protocol+'//' + document.domain + viewer);            
             
         }        
          if(data['kind']=='file'){
@@ -252,7 +252,9 @@ function startClientViewerSocket(socket){
             //~ return false;
         //~ }
         //~ return true;
-    //~ }
+    //~ }                # ~ if viewer['port']:
+                    # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
+                    # ~ viewer['port'] = "5"+ viewer['port']
     
 	//~ function openTCP(spice_host,spice_port,spice_passwd)
 	//~ {
