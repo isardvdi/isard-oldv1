@@ -253,8 +253,8 @@ function startClientViewerSocket(socket){
         //~ }
         //~ return true;
     //~ }                # ~ if viewer['port']:
-                    # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
-                    # ~ viewer['port'] = "5"+ viewer['port']
+                    //////# ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
+                    ////# ~ viewer['port'] = "5"+ viewer['port']
     
 	//~ function openTCP(spice_host,spice_port,spice_passwd)
 	//~ {
