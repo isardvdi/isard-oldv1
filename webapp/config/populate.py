@@ -643,11 +643,12 @@ class Populate(object):
 
                 rpools = r.table('hypervisors_pools')
 
-                self.result(rpools.delete().run())
+                #self.result(rpools.delete().run())
+                viewer=self._secure_viewer()
                 log.info("Table hypervisors_pools found, populating...")
                 self.result(rpools.insert([{'id': 'default',
                                             'name': 'Default',
-                                            'description': 'Non encrypted (not recommended)',
+                                            'description': 'Non encrypted (not recommended)' if viewer is False else 'Encrypted viewer connections',
                                             'paths': {'bases':
                                                           [{'path':'/isard/bases',
                                                                'disk_operations': disk_operations, 'weight': 100}],
@@ -664,7 +665,7 @@ class Populate(object):
                                                           [{'path':'/isard/media',
                                                                'disk_operations': disk_operations, 'weight': 100}],
                                                       },
-                                            'viewer':self._secure_viewer(),
+                                            'viewer':viewer,
                                             'interfaces': [],
                                             'allowed': {
                                                           'roles': [],
