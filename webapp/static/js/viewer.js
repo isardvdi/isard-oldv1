@@ -7,8 +7,6 @@
 
 function chooseViewer(data,socket){
 	os=getOS()
-    os='MacOS'
-    console.log('os found:'+os)
 	new PNotify({
 		title: 'Choose display connection',
 		text: 'Open in browser (html5) or download remote-viewer file.',
@@ -102,9 +100,10 @@ function chooseViewer(data,socket){
 function startClientViewerSocket(socket){
     socket.on('domain_viewer', function (data) {
         var data = JSON.parse(data);
+        $("#hiddenpass-"+data["id"]).val('proves');
         if(data['kind']=='url'){
             viewer=data['viewer']
-            window.open(location.protocol+'//' + document.domain + viewer);            
+            window.open(viewer.replace('<domain>',document.domain));            
             
         }        
          if(data['kind']=='file'){
@@ -141,6 +140,17 @@ function startClientViewerSocket(socket){
 
       return os;
     }
+
+
+//~ function copyToClipboard(el) {
+  //~ var $temp = $("<input>");
+  //~ $("body").append($temp);
+  //~ id=$(el).data('id')
+  //~ console.log($("#hiddenpass-"+id).text())
+  //~ $temp.val($("#hiddenpass-"+id).text()).select();
+  //~ document.execCommand("copy");
+  //~ $temp.remove();
+//~ }
     
 //~ function getClientViewer(data,socket){
 				//~ if(detectXpiPlugin()){

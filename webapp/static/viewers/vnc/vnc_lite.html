@@ -60,7 +60,7 @@
         }
 
     </style>
-
+    <script type="text/javascript" src="add-ca.js"></script>
     <!-- Promise polyfill for IE11 -->
     <script src="vendor/promise.js"></script>
 
@@ -156,7 +156,7 @@
         const host = readQueryVariable('host', window.location.hostname);
         let port = readQueryVariable('port', window.location.port);
         const password = readQueryVariable('password', '');
-        const path = readQueryVariable('path', 'websockify');
+        const path = readQueryVariable('path', '');
 
         // | | |         | | |
         // | | | Connect | | |

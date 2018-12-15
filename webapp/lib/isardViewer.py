@@ -41,8 +41,8 @@ class isardViewer():
                 # ~ if viewer['port']:
                     # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
                     # ~ viewer['port'] = "5"+ viewer['port']
-                url='/wsviewer/eyeos/?host='+viewer['host']+'&port='+viewer['wsport']+'&passwd='+viewer['passwd']
-                return {'kind':'url','viewer':url} 
+                # ~ url='/wsviewer/eyeos/?host='+viewer['host']+'&port='+viewer['wsport']+'&passwd='+viewer['passwd']
+                return {'kind':'url','viewer':viewer['uri']} 
                                      
         if data['kind'] == 'spice-client':
             viewer = self.get_domain_spice_data(data['pk'],remote_addr=remote_addr)
@@ -52,8 +52,8 @@ class isardViewer():
         if data['kind'] == 'vnc-html5':
             viewer = self.get_domain_vnc_data(data['pk'],remote_addr=remote_addr)
             if viewer is not False:
-                url='/wsviewer/novnclite/?host='+viewer['host']+'&port='+viewer['wsport']+'&password='+viewer['passwd']
-                return {'kind':'url','viewer':url}   
+                # ~ url='/wsviewer/novnclite/?host='+viewer['host']+'&port='+viewer['wsport']+'&password='+viewer['passwd']
+                return {'kind':'url','viewer':viewer['uri']}   
                                    
         if data['kind'] == 'vnc-client':
             viewer = self.get_domain_vnc_data(data['pk'],remote_addr=remote_addr)
@@ -69,18 +69,22 @@ class isardViewer():
             if viewer['defaultMode'] == "Secure" and domain['viewer']['port_spice_ssl'] is not False:
                 # ~ viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
                 tlsport=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice_ssl'],remote_addr)
+                port=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice'],remote_addr)
                 return {'host':hostname,
+                        'name': domain['name'],
                         # ~ 'kind':domain['hardware']['graphics']['type'],
-                        'port': False,
-                        'wsport': "5" + tlsport,
+                        'port': port,
+                        'wsport': "5" + port,
                         'tlsport': tlsport,
                         'ca':viewer['certificate'],
                         'domain':viewer['domain'],
                         'passwd':domain['viewer']['passwd'],
+                        'uri': 'https://<domain>/wsviewer/spice/?host='+hostname+'&port=5'+port+'&passwd='+domain['viewer']['passwd']+'&protocol=wss',
                         'viewers_options': domain['options']['viewers']['spice'] if 'spice' in domain['options']['viewers'].keys() else False}
             if viewer['defaultMode'] == "Insecure" and domain['viewer']['port_spice'] is not False:
                 port=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice'],remote_addr)
                 return {'host':hostname,
+                        'name': domain['name'],
                         # ~ 'kind':domain['hardware']['graphics']['type'],
                         'port': port,
                         'wsport': "5" + port,
@@ -88,6 +92,7 @@ class isardViewer():
                         'ca':False,
                         'domain':False,
                         'passwd':domain['viewer']['passwd'],
+                        'uri': 'http://<domain>/wsviewer/spice/?host='+hostname+'&port=5'+port+'&passwd='+domain['viewer']['passwd']+'&protocol=ws',
                         'options':domain['options']['viewers']['spice'] if 'spice' in domain['options']['viewers'].keys() else False}
             log.error('No available Spice Viewer for domain '+id+' exception:'+str(e))
             return False
@@ -103,16 +108,31 @@ class isardViewer():
             domain =  r.table('domains').get(id).run(db.conn)
             hostname = self.get_viewer_hostname(domain['viewer'],remote_addr)
             viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
-
+            port = self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_vnc'], remote_addr)
+            
             # VNC does not have ssl. Only in websockets is available
-            return {'host':hostname,
-                    # ~ 'kind':domain['hardware']['graphics']['type'],
-                    'port':   self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_vnc'], remote_addr),
-                    'wsport': self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_vnc_websocket'], remote_addr),
-                    # ~ 'domain': viewer['domain'],
-                    'passwd': domain['viewer']['passwd'],
-                    'options': domain['options']['viewers']['vnc'] if 'vnc' in domain['options']['viewers'].keys() else False}
-                    
+            if viewer['defaultMode'] == "Secure" and domain['viewer']['port_spice_ssl'] is not False:
+                return {'host':hostname,
+                        'name': domain['name'],
+                        # ~ 'kind':domain['hardware']['graphics']['type'],
+                        'port': port,
+                        'wsport': "5" + port,
+                        'ca':viewer['certificate'],
+                        'domain':viewer['domain'],
+                        'passwd': domain['viewer']['passwd'],
+                        'uri': 'https://<domain>/wsviewer/novnclite/?host='+hostname+'&port=5'+port+'&password='+domain['viewer']['passwd'],
+                        'options': domain['options']['viewers']['vnc'] if 'vnc' in domain['options']['viewers'].keys() else False}
+            if viewer['defaultMode'] == "Insecure" and domain['viewer']['port_spice'] is not False:
+                return {'host':hostname,
+                        'name': domain['name'],
+                        # ~ 'kind':domain['hardware']['graphics']['type'],
+                        'port': port,
+                        'wsport': "5" + port,
+                        'ca':viewer['certificate'],
+                        'domain':viewer['domain'],
+                        'passwd': domain['viewer']['passwd'],
+                        'uri': 'http://<domain>/wsviewer/novnclite/?host='+hostname+'&port=5'+port+'&password='+domain['viewer']['passwd'],
+                        'options': domain['options']['viewers']['vnc'] if 'vnc' in domain['options']['viewers'].keys() else False}                
             log.error('No available VNC Viewer for domain '+id+' exception:'+str(e))
             return False
         except Exception as e:
@@ -266,7 +286,7 @@ class isardViewer():
         delete-this-file=1
         usb-filter=-1,-1,-1,-1,0
         ;tls-ciphers=DEFAULT
-        """ % ('spice',hostname, dict['port'], dict['passwd'], op_fscr, id, c)
+        """ % ('spice',hostname, dict['port'], dict['passwd'], op_fscr, dict['name'], c)
 
             consola = consola + """;host-subject=O=%s,CN=%s
         ;ca=%r
@@ -293,7 +313,7 @@ class isardViewer():
         delete-this-file=1
         usb-filter=-1,-1,-1,-1,0
         tls-ciphers=DEFAULT
-        """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, id, c)
+        """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, dict['name'], c)
 
             consola = consola + """host-subject=C=CA,O=%s,CN=%s
         ca=%r
