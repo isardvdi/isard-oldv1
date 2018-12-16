@@ -24,19 +24,24 @@ class isardViewer():
 
     
     def get_viewer(self,data,current_user,remote_addr=False):
+        domain =  r.table('domains').get(data['pk']).run(db.conn)
+        if 'preferred' in data.keys():
+            domain['viewer']['preferred']=data['kind']
+            r.table('domains').get(data['pk']).update({'viewer':domain['viewer']}).run(db.conn)   
+                   
         if current_user.role == 'admin': 
-            return self.send_viewer(data,remote_addr=remote_addr)
+            return self.send_viewer(data,domain,remote_addr=remote_addr)
         else:
             id=data['pk']
             if id.startswith('_'+current_user.id+'_') or id.startswith('_disposable_'+remote_addr.replace('.','_')+'_'):
-                return self.send_viewer(data,remote_addr=remote_addr)
+                return self.send_viewer(data,domain,remote_addr=remote_addr)
         
         return False
 
 
-    def send_viewer(self,data,kind='domain',remote_addr=False): 
+    def send_viewer(self,data,domain,kind='domain',remote_addr=False): 
         if data['kind'] == 'spice-html5':
-            viewer = self.get_domain_spice_data(data['pk'],remote_addr=remote_addr)
+            viewer = self.get_domain_spice_data(data['pk'],domain,remote_addr=remote_addr)
             if viewer is not False:
                 # ~ if viewer['port']:
                     # ~ viewer['port'] = viewer['port'] if viewer['port'] else viewer['tlsport']
@@ -45,24 +50,24 @@ class isardViewer():
                 return {'kind':'url','viewer':viewer['uri']} 
                                      
         if data['kind'] == 'spice-client':
-            viewer = self.get_domain_spice_data(data['pk'],remote_addr=remote_addr)
+            viewer = self.get_domain_spice_data(data['pk'],domain,remote_addr=remote_addr)
             consola=self.get_spice_file(viewer,data['pk'],remote_addr=remote_addr)
             return {'kind':'file','ext':consola[0],'mime':consola[1],'content':consola[2]}      
                         
         if data['kind'] == 'vnc-html5':
-            viewer = self.get_domain_vnc_data(data['pk'],remote_addr=remote_addr)
+            viewer = self.get_domain_vnc_data(data['pk'],domain,remote_addr=remote_addr)
             if viewer is not False:
                 # ~ url='/wsviewer/novnclite/?host='+viewer['host']+'&port='+viewer['wsport']+'&password='+viewer['passwd']
                 return {'kind':'url','viewer':viewer['uri']}   
                                    
         if data['kind'] == 'vnc-client':
-            viewer = self.get_domain_vnc_data(data['pk'],remote_addr=remote_addr)
+            viewer = self.get_domain_vnc_data(data['pk'],domain,remote_addr=remote_addr)
             consola=self.get_vnc_file(viewer,data['pk'],remote_addr=remote_addr,os=data['os'])
             return {'kind':'file','ext':consola[0],'mime':consola[1],'content':consola[2]}
     
-    def get_domain_spice_data(self, id, remote_addr=False):
+    def get_domain_spice_data(self, id, domain,remote_addr=False):
         try:
-            domain =  r.table('domains').get(id).run(db.conn)
+            # ~ domain =  r.table('domains').get(id).run(db.conn)
             hostname = self.get_viewer_hostname(domain['viewer'],remote_addr)
             viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
  
@@ -103,9 +108,9 @@ class isardViewer():
             log.error('Viewer for domain '+id+' exception:'+str(e))
             return False
     
-    def get_domain_vnc_data(self, id, remote_addr=False):
+    def get_domain_vnc_data(self, id, domain, remote_addr=False):
         try:
-            domain =  r.table('domains').get(id).run(db.conn)
+            # ~ domain =  r.table('domains').get(id).run(db.conn)
             hostname = self.get_viewer_hostname(domain['viewer'],remote_addr)
             viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
             port = self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_vnc'], remote_addr)
@@ -286,7 +291,7 @@ class isardViewer():
         delete-this-file=1
         usb-filter=-1,-1,-1,-1,0
         ;tls-ciphers=DEFAULT
-        """ % ('spice',hostname, dict['port'], dict['passwd'], op_fscr, dict['name'], c)
+        """ % ('spice',hostname, dict['port'], dict['passwd'], op_fscr, dict['name']+' [[NOT ENCRYPTED]]', c)
 
             consola = consola + """;host-subject=O=%s,CN=%s
         ;ca=%r
@@ -313,7 +318,7 @@ class isardViewer():
         delete-this-file=1
         usb-filter=-1,-1,-1,-1,0
         tls-ciphers=DEFAULT
-        """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, dict['name'], c)
+        """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, dict['name']+' [[ENCRYPTED]]', c)
 
             consola = consola + """host-subject=CN=%s
         ca=%r

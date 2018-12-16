@@ -5,97 +5,150 @@
 * License: AGPLv3
 */
 
-function chooseViewer(data,socket){
-	os=getOS()
-	new PNotify({
-		title: 'Choose display connection',
-		text: 'Open in browser (html5) or download remote-viewer file.',
-		icon: 'glyphicon glyphicon-question-sign',
-		hide: false,
-		delay: 3000,
-		confirm: {
-			confirm: true,
-			buttons: [
-				{
-					text: 'SPICE BROWSER',
-					addClass: 'btn-primary',
-					click: function(notice){
-						notice.update({
-							title: 'You choosed spice browser viewer', text: 'Viewer will be opened in new window.\n Please allow popups!', icon: true, type: 'info', hide: true,
-							confirm: {
-								confirm: false
-							},
-							buttons: {
-								closer: true,
-								sticker: false
-							}
-						});                                            
-						socket.emit('domain_viewer',{'pk':data['id'],'kind':'spice-html5','os':os});
-					}
-				},
-				{
-					text: 'SPICE CLIENT',
-					addClass: 'btn-primary',
-					click: function(notice){
-						notice.update({
-							title: 'You choosed spice client viewer', text: 'File will be downloaded. Open it with spice remote-viewer.', icon: true, type: 'info', hide: true,
-							confirm: {
-								confirm: false
-							},
-							buttons: {
-								closer: true,
-								sticker: false
-							}
-						});                                            
-						socket.emit('domain_viewer',{'pk':data['id'],'kind':'spice-client','os':os});
-					}
-				},				
-				{
-					text: 'VNC BROWSER',
-					addClass: 'btn-primary',
-					click: function(notice){
-						notice.update({
-							title: 'You choosed VNC browser viewer', text: 'Viewer will be opened in new window.\n Please allow popups!', icon: true, type: 'info', hide: true,
-							confirm: {
-								confirm: false
-							},
-							buttons: {
-								closer: true,
-								sticker: false
-							}
-						});                                            
-						socket.emit('domain_viewer',{'pk':data['id'],'kind':'vnc-html5','os':os});
-					}
-				},
-				{
-					text: 'VNC CLIENT',
-					addClass: 'btn-primary',
-					click: function(notice){
-						notice.update({
-							title: 'You choosed VNC client viewer', text: 'File will be downloaded. Open it with VNC client app.', icon: true, type: 'info', hide: true,
-							confirm: {
-								confirm: false
-							},
-							buttons: {
-								closer: true,
-								sticker: false
-							}
-						});                                            
-						socket.emit('domain_viewer',{'pk':data['id'],'kind':'vnc-client','os':os});
-					}
-				},	
-			]
-		},
-		buttons: {
-			closer: false,
-			sticker: false
-		},
-		history: {
-			history: false
-		}
-	});                        
-}
+//~ function chooseViewer(data,socket){
+	//~ os=getOS()
+	//~ new PNotify({
+		//~ title: 'Choose display connection',
+		//~ text: 'Open in browser (html5) or download remote-viewer file.',
+		//~ icon: 'glyphicon glyphicon-question-sign',
+		//~ hide: false,
+		//~ delay: 3000,
+		//~ confirm: {
+			//~ confirm: true,
+			//~ buttons: [
+				//~ {
+					//~ text: 'SPICE BROWSER',
+					//~ addClass: 'btn-primary',
+					//~ click: function(notice){
+						//~ notice.update({
+							//~ title: 'You choosed spice browser viewer', text: 'Viewer will be opened in new window.\n Please allow popups!', icon: true, type: 'info', hide: true,
+							//~ confirm: {
+								//~ confirm: false
+							//~ },
+							//~ buttons: {
+								//~ closer: true,
+								//~ sticker: false
+							//~ }
+						//~ });                                            
+						//~ socket.emit('domain_viewer',{'pk':data['id'],'kind':'spice-html5','os':os});
+					//~ }
+				//~ },
+				//~ {
+					//~ text: 'SPICE CLIENT',
+					//~ addClass: 'btn-primary',
+					//~ click: function(notice){
+						//~ notice.update({
+							//~ title: 'You choosed spice client viewer', text: 'File will be downloaded. Open it with spice remote-viewer.', icon: true, type: 'info', hide: true,
+							//~ confirm: {
+								//~ confirm: false
+							//~ },
+							//~ buttons: {
+								//~ closer: true,
+								//~ sticker: false
+							//~ }
+						//~ });                                            
+						//~ socket.emit('domain_viewer',{'pk':data['id'],'kind':'spice-client','os':os});
+					//~ }
+				//~ },				
+				//~ {
+					//~ text: 'VNC BROWSER',
+					//~ addClass: 'btn-primary',
+					//~ click: function(notice){
+						//~ notice.update({
+							//~ title: 'You choosed VNC browser viewer', text: 'Viewer will be opened in new window.\n Please allow popups!', icon: true, type: 'info', hide: true,
+							//~ confirm: {
+								//~ confirm: false
+							//~ },
+							//~ buttons: {
+								//~ closer: true,
+								//~ sticker: false
+							//~ }
+						//~ });                                            
+						//~ socket.emit('domain_viewer',{'pk':data['id'],'kind':'vnc-html5','os':os});
+					//~ }
+				//~ },
+				//~ {
+					//~ text: 'VNC CLIENT',
+					//~ addClass: 'btn-primary',
+					//~ click: function(notice){
+						//~ notice.update({
+							//~ title: 'You choosed VNC client viewer', text: 'File will be downloaded. Open it with VNC client app.', icon: true, type: 'info', hide: true,
+							//~ confirm: {
+								//~ confirm: false
+							//~ },
+							//~ buttons: {
+								//~ closer: true,
+								//~ sticker: false
+							//~ }
+						//~ });                                            
+						//~ socket.emit('domain_viewer',{'pk':data['id'],'kind':'vnc-client','os':os});
+					//~ }
+				//~ },	
+			//~ ]
+		//~ },
+		//~ buttons: {
+			//~ closer: false,
+			//~ sticker: false
+		//~ },
+		//~ history: {
+			//~ history: false
+		//~ }
+	//~ });                        
+//~ }
 
+function setViewerButtons(id,socket){
+    offer=[
+             {
+             'type': 'spice', 
+             'client': 'app',
+             'secure': true,
+             'preferred': true
+             },
+             {
+             'type': 'vnc', 
+             'client': 'websocket', 
+             'secure': true,
+             'preferred': false
+             },
+             {
+             'type': 'vnc', 
+             'client': 'app', 
+             'secure': false,
+             'preferred': false
+             },             
+            ]
+    html=""
+    $.each(offer, function(idx,disp){
+        prehtml='<div class="row"><div class="col-12 text-center">'
+        posthtml='</div></div>'
+        success='btn-round btn-info'
+        preferred=''
+        w='50'
+        lock='<i class="fa fa-unlock"></i>'
+        type=''
+        btntext=''
+        br=''
+        if(disp['preferred']){success='btn-success';preferred='btn-lg';w='70';br='<br>'}
+        if(disp['secure']){lock='<i class="fa fa-lock"></i>';}
+        if(disp['client']=='app')
+            {type='<i class="fa fa-download"></i>';btntext=disp['type'].toUpperCase()+' Application';client='client';}
+        else if(disp['client']=='websocket')
+            {type='<i class="fa fa-html5"></i>';btntext=disp['type'].toUpperCase()+' Browser';client='html5'}
+        html=br+prehtml+html+'<button data-pk="'+id+'" data-type="'+disp['type']+'" data-client="'+client+'" data-os="'+getOS()+'" type="button" class="btn '+success+' '+preferred+' btn-viewers" style="width:'+w+'%">'+lock+' '+type+' '+btntext+'</button>'+posthtml+br;
+    })
+    $('#viewer-buttons').html(html);
+    $('#viewer-buttons .btn-viewers').on('click', function () {
+        console.log($(this).data('type'))
+        if($('#chk-viewers').iCheck('update')[0].checked){
+            preferred=true
+        }else{
+            preferred=false
+        }
+        socket.emit('domain_viewer',{'pk':id,'kind':$(this).data('type')+'-'+$(this).data('client'),'os':$(this).data('os'),'preferred':preferred});
+        $("#modalOpenViewer").modal('hide');        
+        
+    });    
+}
 
 function startClientViewerSocket(socket){
     socket.on('domain_viewer', function (data) {

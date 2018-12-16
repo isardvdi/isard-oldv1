@@ -198,12 +198,20 @@ $(document).ready(function() {
 				});	
                 break;
             case 'btn-display':
-                chooseViewer(data,socket);
+                //~ chooseViewer(data,socket);
+                setViewerButtons(data['id'],socket);
+
+                $('#modalOpenViewer').modal({
+                    backdrop: 'static',
+                    keyboard: false
+                }).modal('show');
+                        
                 break;
         }
     });
 
 
+    
     // SocketIO
     //~ reconnect=-1;
     socket = io.connect(location.protocol+'//' + document.domain + ':' + location.port+'/sio_users');
@@ -395,7 +403,6 @@ function actionsDesktopDetail(){
 	});
 
 	$('.btn-events').on('click', function () {
-	    console.log('events')
             var pk=$(this).closest("div").attr("data-pk");
             $("#modalShowInfoForm")[0].reset();
 			$('#modalShowInfo').modal({
