@@ -7,7 +7,7 @@
 # coding=utf-8
 
 import rethinkdb as r
-import time, sys
+import time, sys, requests
 
 from ..lib.log import *
 from ..auth.authentication import Password
@@ -52,6 +52,10 @@ class Upgrade(object):
                 else:
                     log.info('No database upgrade needed.')
         self.upgrade_if_needed()
+        
+        ''' UPDATE CERTIFICATE IF NEW ONE FOUND'''
+        self.new_secure_viewer()
+        
                 
     def do_backup(self):
         None
@@ -465,3 +469,96 @@ class Upgrade(object):
             for i in apply_indexes:
                 r.table(table).index_create(i).run()
                 r.table(table).index_wait(i).run()
+
+    '''
+    UPGRADE CERTIFICATE IF EXISTS A NEW ONE
+    '''
+    def new_secure_viewer(self):
+        ## If ca-cert.pem file exists: self signed
+        ## Else is a verified certificate
+
+        from OpenSSL import crypto
+        ca_file='/certs/default/ca-cert.pem'
+        server_file='/certs/default/server-cert.pem'
+
+        try:
+            server_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(server_file).read())
+        except:
+            log.warning('No viewer certificates found for default hypervisors pool. Connections not secure.')
+            viewer = {'defaultMode':'Insecure',
+                                'certificate':False,
+                                'host-subject': False,
+                                'domain':False}            
+        try:
+            with open(ca_file, "r") as caFile:
+                ca=caFile.read()
+            ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(ca_file).read())
+            for t in ca.get_subject().get_components():
+                hs=hs+t[0].decode("utf-8")+'='+t[1].decode("utf-8")+','
+            ## It is a self signed certificate (we should add ca and host subject to spice viewer)
+            viewer = {'defaultMode':'Secure',
+                                'certificate':  ca,
+                                'host-subject': hs[:-1],
+                                'domain':ca_cert.get_subject().CN}              
+        except:
+            ## It is a verified certificate (we don't need to add anything to spice viewer)
+            viewer = {'defaultMode':'Secure',
+                                'certificate':False,
+                                'host-subject': False,
+                                'domain':server_cert.get_subject().CN}  
+
+        try:
+            r.table('hypervisors_pools').get('default').update({'viewer':viewer}).run()
+            log.info('Updated default hypervisor pool certificate with new one found!')
+            return True
+        except Exception as e:
+            log.error(str(e))
+            log.warning('Failed updating hypervisors pools with new certificate found!')
+            return False
+
+
+
+
+        
+        # ~ ca_file='/certs/default/ca-cert.pem'
+        # ~ try:
+            # ~ with open(ca_file, "r") as caFile:
+                # ~ ca=caFile.read()
+        # ~ except:
+            # ~ ca=False
+        # ~ try:
+            # ~ with app.app_context():
+                # ~ viewer=r.table('hypervisors_pools').get('default').pluck('viewer').run()['viewer']
+            # ~ if viewer['defaultMode']=='Insecure':
+                # ~ log.warning('Using insecure viewer. Non ssl encrypted!')
+                # ~ return False
+            # ~ if viewer['certificate'] == ca:
+                # ~ return False                
+        # ~ except Exception as e:
+            # ~ log.error('Failed checking certificate in hypervisors pools. Sound weird...')
+            # ~ return False
+        # ~ try:
+            # ~ from OpenSSL import crypto
+            # ~ server_file='/certs/default/server-cert.pem'
+            # ~ cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(server_file).read())
+        # ~ except:
+            # ~ log.error('Server certificate seems to be missing.')
+            # ~ return False
+        # ~ try:
+            # ~ requests.get('https://isard-nginx')
+            # ~ selfsigned=False
+        # ~ except Exception as e:
+            # ~ if 'bad handshake' in str(e):
+                # ~ selfsigned=True
+            # ~ else:
+                # ~ selfsigned=False
+        # ~ try:
+            # ~ r.table('hypervisors_pools').get('default').update({'viewer':{'defaultMode':'Secure',
+                                                                # ~ 'certificate':ca,
+                                                                # ~ 'domain':cert.get_subject().CN}}).run()
+            # ~ log.info('Updated default hypervisor pool certificate with new one found!')
+            # ~ return True
+        # ~ except Exception as e:
+            # ~ log.error(str(e))
+            # ~ log.warning('Failed updating hypervisors pools with new certificate found!')
+            # ~ return False

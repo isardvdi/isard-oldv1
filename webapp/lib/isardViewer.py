@@ -315,13 +315,13 @@ class isardViewer():
         tls-ciphers=DEFAULT
         """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, dict['name'], c)
 
-            consola = consola + """host-subject=C=CA,O=%s,CN=%s
+            consola = consola + """host-subject=CN=%s
         ca=%r
         toggle-fullscreen=shift+f11
         release-cursor=shift+f12
         secure-attention=ctrl+alt+end
         secure-channels=main;inputs;cursor;playback;record;display;usbredir;smartcard""" % (
-            'localdomain', '*.localdomain', dict['ca'])
+            dict['domain'], dict['ca'])
 
         consola = consola.replace("'", "")
         return 'vv','application/x-virt-viewer',consola
