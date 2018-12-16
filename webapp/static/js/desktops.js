@@ -11,6 +11,8 @@ $(document).ready(function() {
     user['role']=$('#user-data').data("role");
     modal_add_desktops = $('#modal_add_desktops').DataTable()
 	initalize_modal_all_desktops_events()
+    
+    setViewerHelp();
  
 	$template = $(".template-detail-domain");
 

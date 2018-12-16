@@ -118,7 +118,12 @@ function startClientViewerSocket(socket){
     });
 }    
     
-    function getOS() {
+    
+function setViewerHelp(){
+    $(".howto-"+getOS()).css("display", "block");
+}    
+
+function getOS() {
       var userAgent = window.navigator.userAgent,
           platform = window.navigator.platform,
           macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
@@ -139,7 +144,7 @@ function startClientViewerSocket(socket){
       }
 
       return os;
-    }
+}
 
 
 //~ function copyToClipboard(el) {
