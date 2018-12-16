@@ -26,8 +26,11 @@ class isardViewer():
     def get_viewer(self,data,current_user,remote_addr=False):
         domain =  r.table('domains').get(data['pk']).run(db.conn)
         if 'preferred' in data.keys():
-            domain['viewer']['preferred']=data['kind']
-            r.table('domains').get(data['pk']).update({'viewer':domain['viewer']}).run(db.conn)   
+            if data['preferred']:
+                domain['options']['viewers']['preferred']=data['kind']
+            else:
+                domain['options']['viewers']['preferred']=False
+            r.table('domains').get(data['pk']).update({'options':{'viewers':domain['options']['viewers']}}).run(db.conn)   
                    
         if current_user.role == 'admin': 
             return self.send_viewer(data,domain,remote_addr=remote_addr)

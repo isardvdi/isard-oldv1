@@ -66,6 +66,7 @@ $(document).ready(function() {
 				{ "data": null, "width": "10px"},
 				{ "data": null, "width": "10px"},
 				{ "data": "status", "width": "10px"},
+                { "data": null, "width": "10px"},
 				{ "data": "name"},
                 { "data": null, "width": "90px"},
                 //~ { "data": null, "width": "90px"}
@@ -91,13 +92,19 @@ $(document).ready(function() {
 							"render": function ( data, type, full, meta ) {
 							  return renderStatus(full);
 							}},
-							{
+                            {
 							"targets": 5,
+							"render": function ( data, type, full, meta ) {
+                                if('preferred' in full['options']['viewers'] && full['options']['viewers']['preferred']){return full['options']['viewers']['preferred'].replace('-','/').toUpperCase();}
+							  return '';
+							}},                            
+							{
+							"targets": 6,
 							"render": function ( data, type, full, meta ) {
 							  return renderName(full);
 							}},
 							{
-							"targets": 6,
+							"targets": 7,
 							"render": function ( data, type, full, meta ) {
 							  return renderMedia(full);
 							}},
@@ -238,6 +245,23 @@ $(document).ready(function() {
     
     socket.on('desktop_data', function(data){
         var data = JSON.parse(data);
+        if(data.status =='Started' && table.row('#'+data.id).data().status != 'Started'){
+            if('preferred' in data['options']['viewers'] && data['options']['viewers']['preferred']){
+                socket.emit('domain_viewer',{'pk':data.id,'kind':data['options']['viewers']['preferred'],'os':getOS()});
+            }else{
+                 setViewerButtons(data.id,socket);
+                    $('#modalOpenViewer').modal({
+                        backdrop: 'static',
+                        keyboard: false
+                    }).modal('show');
+        }
+
+        }
+        
+        //~ if(claimed==false){
+
+        //~ }
+            
         dtUpdateInsert(table,data,false);
         setDesktopDetailButtonsStatus(data.id, data.status);
     });

@@ -138,7 +138,6 @@ function setViewerButtons(id,socket){
     })
     $('#viewer-buttons').html(html);
     $('#viewer-buttons .btn-viewers').on('click', function () {
-        console.log($(this).data('type'))
         if($('#chk-viewers').iCheck('update')[0].checked){
             preferred=true
         }else{
