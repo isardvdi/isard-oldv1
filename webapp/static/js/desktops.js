@@ -50,8 +50,10 @@ $(document).ready(function() {
 				"dataSrc": ""
 			},
 			"language": {
-				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
-			},
+				"loadingRecords": '<i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+                "emptyTable": "<h1>You don't have any desktop created yet.</h1><br><h2>Create one using the +Add new button on top right of this page.</h2><br>\
+                                Select your desktop from templates created and shared by the administrator."
+			},           
 			"rowId": "id",
 			"deferRender": true,
 			"columns": [

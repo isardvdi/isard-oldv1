@@ -105,6 +105,12 @@ function setViewerButtons(id,socket,offer){
              'preferred': true
              },
              {
+             'type': 'spice', 
+             'client': 'websocket',
+             'secure': true,
+             'preferred': false
+             },
+             {
              'type': 'vnc', 
              'client': 'websocket', 
              'secure': true,
