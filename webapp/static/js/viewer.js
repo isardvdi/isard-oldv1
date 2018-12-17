@@ -96,7 +96,7 @@
 	//~ });                        
 //~ }
 
-function setViewerButtons(id,socket){
+function setViewerButtons(id,socket,offer){
     offer=[
              {
              'type': 'spice', 

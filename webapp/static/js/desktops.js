@@ -69,7 +69,6 @@ $(document).ready(function() {
                 { "data": null, "width": "10px"},
 				{ "data": "name"},
                 { "data": null, "width": "90px"},
-                //~ { "data": null, "width": "90px"}
 				],
 			 "order": [[3, 'desc']],		 
 		"columnDefs": [ {

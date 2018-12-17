@@ -12,7 +12,7 @@ import time, sys
 from ..lib.log import *
 from ..auth.authentication import Password
 from ..lib.load_config import load_config
-
+from ..lib.admin_api import Certificates
 
 class Populate(object):
     def __init__(self):
@@ -46,7 +46,6 @@ class Populate(object):
 
     def defaults(self):
         return self.check_integrity()
-
 
     def check_integrity(self,commit=False):
         dbtables=r.table_list().run()
@@ -644,7 +643,8 @@ class Populate(object):
                 rpools = r.table('hypervisors_pools')
 
                 #self.result(rpools.delete().run())
-                viewer=self._secure_viewer()
+                cert = Certificates()
+                viewer=cert.get_viewer()
                 log.info("Table hypervisors_pools found, populating...")
                 self.result(rpools.insert([{'id': 'default',
                                             'name': 'Default',
@@ -783,54 +783,9 @@ class Populate(object):
             txt = ''.join((c for c in unicodedata.normalize('NFD', txt) if unicodedata.category(c) != 'Mn'))
             return txt.replace(" ", "_")
 
-    def _secure_viewer(self):
-        from OpenSSL import crypto
-        ca_file='/certs/default/ca-cert.pem'
-        server_file='/certs/default/server-cert.pem'
-
-        try:
-            server_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(server_file).read())
-        except:
-            log.warning('No viewer certificates found for default hypervisors pool. Connections not secure.')
-            return {'defaultMode':'Insecure',
-                                'certificate':False,
-                                'host-subject': False,
-                                'domain':False}            
-        try:
-            with open(ca_file, "r") as caFile:
-                ca=caFile.read()
-            ca_cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(ca_file).read())
-            for t in ca.get_subject().get_components():
-                hs=hs+t[0].decode("utf-8")+'='+t[1].decode("utf-8")+','
-            ## It is a self signed certificate (we should add ca and host subject to spice viewer)
-            return {'defaultMode':'Secure',
-                                'certificate':  ca,
-                                'host-subject': hs[:-1],
-                                'domain':ca_cert.get_subject().CN}              
-        except:
-            ## It is a verified certificate (we don't need to add anything to spice viewer)
-            return {'defaultMode':'Secure',
-                                'certificate':False,
-                                'host-subject': False,
-                                'domain':server_cert.get_subject().CN}   
 
 
 
-
-            
-            
-        # ~ try:
-            # ~ from OpenSSL import crypto
-            # ~ cert = crypto.load_certificate(crypto.FILETYPE_PEM, open(ca_file).read())
-            # ~ return {'defaultMode':'Secure',
-                                # ~ 'certificate':ca,
-                                # ~ 'domain':ca_cert.get_subject().CN}}
-        # ~ except Exception as e:
-            # ~ log.error(str(e))
-            # ~ log.warning('Using insecure viewer. Non ssl encrypted!')
-            # ~ return {'defaultMode':'Insecure',
-                                # ~ 'certificate':ca,
-                                # ~ 'domain':False}
                                 
     def _hypervisor_viewer_hostname(self,viewer_hostname):
         hostname_file='install/host_name'

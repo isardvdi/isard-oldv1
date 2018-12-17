@@ -70,35 +70,34 @@ class isardViewer():
     
     def get_domain_spice_data(self, id, domain,remote_addr=False):
         try:
-            # ~ domain =  r.table('domains').get(id).run(db.conn)
             hostname = self.get_viewer_hostname(domain['viewer'],remote_addr)
             viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
  
             if viewer['defaultMode'] == "Secure" and domain['viewer']['port_spice_ssl'] is not False:
-                # ~ viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
                 tlsport=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice_ssl'],remote_addr)
                 port=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice'],remote_addr)
+                selfsigned='' if viewer['certificate'] is False else '_ss'
                 return {'host':hostname,
                         'name': domain['name'],
-                        # ~ 'kind':domain['hardware']['graphics']['type'],
                         'port': port,
                         'wsport': "5" + port,
                         'tlsport': tlsport,
                         'ca':viewer['certificate'],
                         'domain':viewer['domain'],
+                        'host-subject':viewer['host-subject'],
                         'passwd':domain['viewer']['passwd'],
-                        'uri': 'https://<domain>/wsviewer/spice/?host='+hostname+'&port=5'+port+'&passwd='+domain['viewer']['passwd']+'&protocol=wss',
+                        'uri': 'https://<domain>/wsviewer/spice'+selfsigned+'/?host='+hostname+'&port=5'+port+'&passwd='+domain['viewer']['passwd']+'&protocol=wss',
                         'viewers_options': domain['options']['viewers']['spice'] if 'spice' in domain['options']['viewers'].keys() else False}
             if viewer['defaultMode'] == "Insecure" and domain['viewer']['port_spice'] is not False:
                 port=self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_spice'],remote_addr)
                 return {'host':hostname,
                         'name': domain['name'],
-                        # ~ 'kind':domain['hardware']['graphics']['type'],
                         'port': port,
                         'wsport': "5" + port,
                         'tlsport':False,
                         'ca':False,
                         'domain':False,
+                        'host-subject':False,
                         'passwd':domain['viewer']['passwd'],
                         'uri': 'http://<domain>/wsviewer/spice/?host='+hostname+'&port=5'+port+'&passwd='+domain['viewer']['passwd']+'&protocol=ws',
                         'options':domain['options']['viewers']['spice'] if 'spice' in domain['options']['viewers'].keys() else False}
@@ -113,31 +112,30 @@ class isardViewer():
     
     def get_domain_vnc_data(self, id, domain, remote_addr=False):
         try:
-            # ~ domain =  r.table('domains').get(id).run(db.conn)
             hostname = self.get_viewer_hostname(domain['viewer'],remote_addr)
             viewer = r.table('hypervisors_pools').get(domain['hypervisors_pools'][0]).run(db.conn)['viewer']
             port = self.get_viewer_port(domain['hyp_started'],domain['viewer']['port_vnc'], remote_addr)
-            
-            # VNC does not have ssl. Only in websockets is available
+            selfsigned='' if viewer['certificate'] is False else '_ss'
+            ''' VNC does not have ssl. Only in websockets is available '''
             if viewer['defaultMode'] == "Secure" and domain['viewer']['port_spice_ssl'] is not False:
                 return {'host':hostname,
                         'name': domain['name'],
-                        # ~ 'kind':domain['hardware']['graphics']['type'],
                         'port': port,
                         'wsport': "5" + port,
                         'ca':viewer['certificate'],
                         'domain':viewer['domain'],
+                        'host-subject':viewer['host-subject'],
                         'passwd': domain['viewer']['passwd'],
-                        'uri': 'https://<domain>/wsviewer/novnclite/?host='+hostname+'&port=5'+port+'&password='+domain['viewer']['passwd'],
+                        'uri': 'https://<domain>/wsviewer/novnclite'+selfsigned+'/?host='+hostname+'&port=5'+port+'&password='+domain['viewer']['passwd'],
                         'options': domain['options']['viewers']['vnc'] if 'vnc' in domain['options']['viewers'].keys() else False}
             if viewer['defaultMode'] == "Insecure" and domain['viewer']['port_spice'] is not False:
                 return {'host':hostname,
                         'name': domain['name'],
-                        # ~ 'kind':domain['hardware']['graphics']['type'],
                         'port': port,
                         'wsport': "5" + port,
                         'ca':viewer['certificate'],
                         'domain':viewer['domain'],
+                        'host-subject':viewer['host-subject'],
                         'passwd': domain['viewer']['passwd'],
                         'uri': 'http://<domain>/wsviewer/novnclite/?host='+hostname+'&port=5'+port+'&password='+domain['viewer']['passwd'],
                         'options': domain['options']['viewers']['vnc'] if 'vnc' in domain['options']['viewers'].keys() else False}                
@@ -323,13 +321,13 @@ class isardViewer():
         tls-ciphers=DEFAULT
         """ % ('spice',hostname, dict['passwd'], dict['tlsport'], op_fscr, dict['name']+' [[ENCRYPTED]]', c)
 
-            consola = consola + """host-subject=CN=%s
-        ca=%r
+            consola = consola + """%shost-subject=%s
+        %sca=%r
         toggle-fullscreen=shift+f11
         release-cursor=shift+f12
         secure-attention=ctrl+alt+end
         secure-channels=main;inputs;cursor;playback;record;display;usbredir;smartcard""" % (
-            dict['domain'], dict['ca'])
+            '' if dict['host-subject'] is not False else ';', dict['host-subject'], '' if dict['ca'] is not False else ';', dict['ca'])
 
         consola = consola.replace("'", "")
         return 'vv','application/x-virt-viewer',consola

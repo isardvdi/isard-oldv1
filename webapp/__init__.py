@@ -26,11 +26,16 @@ app.secret_key = "Change this key!//\xf7\x83\xbe\x17\xfa\xa3zT\n\\]m\xa6\x8bF\xd
 
 from webapp.wizard import WizardLib
 w=WizardLib.Wizard()
-# This will start a Wizard Flask app that will continue on wizard finish.
+'''This will start a Wizard Flask app that will continue on wizard finish.'''
 w=None
 
 from webapp.config import upgrade
 up=upgrade.Upgrade()
+
+''' Check for new certificates and update db if needed '''
+from webapp.lib.admin_api import Certificates
+c=Certificates()
+c.update_hyper_pool()
 
 print('Starting isard webapp...')
 if not os.path.exists('./install/.wizard'): exit(1)
@@ -50,16 +55,6 @@ if app.debug:
 else:
     log.info('Debug mode: {}'.format(app.debug))
 
-#~ '''
-#~ Populate database if not exists
-#~ '''
-
-# ~ from .config.populate import Populate
-# ~ p=Populate()
-# ~ if p.database():
-    # ~ p.defaults()
-# ~ else:
-    # ~ exit(1)
 
 '''
 Scheduler
