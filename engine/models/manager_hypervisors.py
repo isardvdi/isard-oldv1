@@ -435,8 +435,6 @@ class ManagerHypervisors(object):
                 import pprint
                 logs.changes.debug(pprint.pformat(c))
 
-
-
                 # action deleted
                 if c.get('new_val', None) is None:
                     pass
@@ -460,11 +458,7 @@ class ManagerHypervisors(object):
                     # if engine is stopped/restarting or not hypervisors online
 
 
-
-
                     if old_status != new_status:
-
-
 
                         # print('&&&&&&& ID DOMAIN {} - old_status: {} , new_status: {}, detail: {}'.format(domain_id,old_status,new_status, new_detail))
                         # if new_status[-3:] == 'ing':
@@ -475,6 +469,8 @@ class ManagerHypervisors(object):
                         # print('&&&&&&&ESTADOS IGUALES OJO &&&&&&&\n&&&&&&&& ID DOMAIN {} - old_status: {} , new_status: {}, detail: {}'.
                         #       format(domain_id,old_status,new_status,new_detail))
                         pass
+
+                ################### CHANGES IN STATUS => ACTION ##################
 
                 if (new_domain is True and new_status == "CreatingDiskFromScratch") or \
                         (old_status == 'FailedCreatingDomain' and new_status == "CreatingDiskFromScratch"):

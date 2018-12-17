@@ -12,13 +12,14 @@ import time, sys
 from ..lib.log import *
 from ..auth.authentication import Password
 from ..lib.load_config import load_config
+from engine.models.domain_xml import populate_dict_hardware_from_create_dict
 
 
 ''' 
 Update to new database release version when new code version release
 '''
-release_version = 4
-tables=['config','hypervisors','hypervisors_pools','domains','media']
+release_version = 6
+tables=['config','hypervisors','hypervisors_pools','domains','media','graphics']
 
 
 class Upgrade(object):
@@ -52,7 +53,7 @@ class Upgrade(object):
                 else:
                     log.info('No database upgrade needed.')
         self.upgrade_if_needed()
-                
+
     def do_backup(self):
         None
 
@@ -219,6 +220,78 @@ class Upgrade(object):
         return True
 
     '''
+    GRAPHICS TABLE UPGRADES
+    '''
+    def graphics(self, version):
+        table = 'graphics'
+        data = list(r.table(table).run())
+        log.info('UPGRADING ' + table + ' VERSION ' + str(version))
+        if version == 5:
+            for d in data:
+                id = d['id']
+                name = d['name']
+                description = 'Spice and vnc'
+                r.table(table).get(id).delete().run(self.conn)
+
+
+                ''' CONVERSION FIELDS PRE CHECKS '''
+                r.table('graphics').insert([{'id': f'{id}',
+                                             'name': f'{name}',
+                                             'description': f'{description}',
+                                             'offer': [
+                                                 {
+                                                     'type': 'spice',  # spice or vnc
+                                                     'client': 'app',  # app or websocket
+                                                     'secure': True
+                                                 },
+                                                 {
+                                                     'type': 'vnc',  # spice or vnc
+                                                     'client': 'websocket',  # app or websocket
+                                                     'secure': False
+                                                 },
+                                             ],
+                                             'types': [
+                                                 {'type': 'spice',
+                                                  'attributes_extra': {},
+                                                  'options': {
+                                                  # from https://libvirt.org/formatdomain.html#elementsGraphics
+                                                      'image': {'compression': 'auto_glz'},
+                                                  # compression: auto_glz, auto_lz, quic, glz, lz, off
+                                                      'jpeg': {'compression': 'always'},
+                                                  # compression: auto, never, always
+                                                      'zlib': {'compression': 'always'},
+                                                  # compression: auto, never, always
+                                                      'playback': {'compression': 'off'},  # compression: on, off
+                                                      'streaming': {'mode': 'all'},  # mode: filter, all or off
+                                                      # 'clipboard': {'copypaste':'no'},     # options: filter, all or off
+                                                      # 'listen': {'type': 'address', 'address': '0.0.0.0'},
+                                                  }
+                                                  },
+                                                 {'type': 'vlc',
+                                                  'attributes_extra': {'sharePolicy': 'ignore'},
+                                                  # allow-exclusive / force-shared / ignore
+                                                  'options': {
+                                                  # from https://libvirt.org/formatdomain.html#elementsGraphics
+                                                      'listen': {'type': 'address', 'address': '0.0.0.0'},
+                                                  }
+                                                  },
+                                             ],
+                                             'allowed': {
+                                                 'roles': [],
+                                                 'categories': [],
+                                                 'groups': [],
+                                                 'users': []}
+                                             }]).run(self.conn)
+
+            #recreate hardware dict from create_dict:
+            domains_id = [d['id'] for d in r.table('domains').pluck('id').run(self.conn)]
+
+            for id in domains_id:
+                populate_dict_hardware_from_create_dict(id)
+
+        return True
+
+    '''
     HYPERVISORS_POOLS TABLE UPGRADES
     '''
     def hypervisors_pools(self,version):
@@ -297,7 +370,7 @@ class Upgrade(object):
                     log.error('Something went wrong while upgrading hypervisors!')
                     log.error(e)
                     exit(1)
-                
+
         return True
 
     '''
@@ -307,47 +380,65 @@ class Upgrade(object):
         table='domains'
         data=list(r.table(table).run())
         log.info('UPGRADING '+table+' VERSION '+str(version))
+        if version == 6:
+            for d in data:
+                id=d['id']
+                d.pop('id',None)
+                try:
+
+                    self.add_keys(  table,
+                                    [   {'state': 'Stopped',
+                                         'event': False}],
+                                        id=id)
+                except Exception as e:
+                    log.error('Could not update table '+table+' add fields for db version '+version+'!')
+                    log.error('Error detail: '+str(e))
+
+                ''' REMOVE FIELDS PRE CHECKS '''
+
+
+        return True
         if version == 2:
             for d in data:
                 id=d['id']
-                d.pop('id',None)                
-                
-                ''' CONVERSION FIELDS PRE CHECKS ''' 
-                # ~ try:  
+                d.pop('id',None)
+
+                ''' CONVERSION FIELDS PRE CHECKS '''
+                # ~ try:
                     # ~ if not self.check_done( d,
                                         # ~ [],
-                                        # ~ []):  
+                                        # ~ []):
                         ##### CONVERSION FIELDS
                         # ~ cfg['field']={}
-                        # ~ r.table(table).update(cfg).run()  
+                        # ~ r.table(table).update(cfg).run()
                 # ~ except Exception as e:
                     # ~ log.error('Could not update table '+table+' remove fields for db version '+version+'!')
                     # ~ log.error('Error detail: '+str(e))
-   
+
                 ''' NEW FIELDS PRE CHECKS '''   
-                try: 
+                try:
                     if not self.check_done( d,
                                         ['preferences'],
-                                        []):                                     
+                                        []):
                         ##### NEW FIELDS
-                        self.add_keys(  table, 
+                        self.add_keys(  table,
                                         [   {'options': {'viewers':{'spice':{'fullscreen':False}}}}],
                                             id=id)
                 except Exception as e:
                     log.error('Could not update table '+table+' add fields for db version '+version+'!')
                     log.error('Error detail: '+str(e))
-                
-                ''' REMOVE FIELDS PRE CHECKS ''' 
-                # ~ try:  
+
+                ''' REMOVE FIELDS PRE CHECKS '''
+                # ~ try:
                     # ~ if not self.check_done( d,
                                         # ~ [],
-                                        # ~ []):   
+                                        # ~ []):
                         #### REMOVE FIELDS
                         # ~ self.del_keys(TABLE,[])
                 # ~ except Exception as e:
                     # ~ log.error('Could not update table '+table+' remove fields for db version '+version+'!')
-                    # ~ log.error('Error detail: '+str(e))                    
-         
+                    # ~ log.error('Error detail: '+str(e))
+
         return True
 
     '''

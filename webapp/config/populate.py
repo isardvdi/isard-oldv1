@@ -420,23 +420,46 @@ class Populate(object):
                 r.table_create('graphics', primary_key="id").run()
                 self.result(r.table('graphics').insert([{'id': 'default',
                                                          'name': 'Default',
-                                                         'description': 'Spice viewer',
-                                                         'type':'spice',
+                                                         'description': 'Spice and vnc',
+                                                         'offer': [
+                                                             {
+                                                             'type': 'spice',  # spice or vnc
+                                                             'client': 'app',  # app or websocket
+                                                             'secure': True,
+                                                             'preferred': True
+                                                             },
+                                                             {
+                                                             'type': 'vnc',    # spice or vnc
+                                                             'client': 'websocket',  # app or websocket
+                                                             'secure': False,
+                                                             'preferred': False
+                                                             },
+                                                            ],
+                                                         'types':[
+                                                             {'type':'spice',
+                                                              'attributes_extra':{},
+                                                              'options':{                         # from https://libvirt.org/formatdomain.html#elementsGraphics
+                                                                  'image':{'compression':'auto_glz'},  # compression: auto_glz, auto_lz, quic, glz, lz, off
+                                                                  'jpeg': {'compression':'always'},    # compression: auto, never, always
+                                                                  'zlib': {'compression':'always'},    # compression: auto, never, always
+                                                                  'playback': {'compression':'off'},   # compression: on, off
+                                                                  'streaming':{'mode':'all'},          # mode: filter, all or off
+                                                                  # 'clipboard': {'copypaste':'no'},     # options: filter, all or off
+                                                                  # 'listen': {'type': 'address', 'address': '0.0.0.0'},
+                                                                  }
+                                                              },
+                                                             {'type':'vlc',
+                                                              'attributes_extra': {'sharePolicy':'ignore'},  # allow-exclusive / force-shared / ignore
+                                                              'options':{                         # from https://libvirt.org/formatdomain.html#elementsGraphics
+                                                                  'listen': {'type': 'address', 'address': '0.0.0.0'},
+                                                                  }
+                                                              },
+                                                         ],
                                                          'allowed': {
                                                              'roles': [],
                                                              'categories': [],
                                                              'groups': [],
-                                                             'users': []},
-                                                         },
-                                                        {'id': 'vnc',
-                                                         'name': 'VNC',
-                                                         'description': 'Not functional',
-                                                         'type':'vnc',
-                                                         'allowed': {
-                                                             'roles': ['admin'],
-                                                             'categories': False,
-                                                             'groups': False,
-                                                             'users': False}
+                                                             'users': []}
                                                          }]).run())
             return True
 
