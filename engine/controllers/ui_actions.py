@@ -183,7 +183,12 @@ class UiActions(object):
         else:
             self.stop_domain(id, hyp_id)
 
-    def stop_domain(self, id_domain, hyp_id, delete_after_stopped=False):
+    def stop_domain_and_delete(self,id_domain):
+        self.stop_domain(id_domain=id_domain,delete_after_stopped=True)
+
+    def stop_domain(self, id_domain, hyp_id=False, delete_after_stopped=False):
+        if hyp_id is False:
+            hyp_id = get_domain_hyp_started(id_domain)
         update_domain_status(status='Stopping',
                              id_domain=id_domain,
                              hyp_id=hyp_id,
@@ -294,7 +299,7 @@ class UiActions(object):
 
                     self.manager.q.workers[next_hyp].put(action)
                 except Exception as e:
-                    update_domain_status(status='Stopped',
+                    update_domain_status(status='Failed',
                                          id_domain=id_domain,
                                          hyp_id=False,
                                          detail='Creating template operation failed when insert action in queue for disk operations')

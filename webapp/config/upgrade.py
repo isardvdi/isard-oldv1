@@ -78,6 +78,10 @@ class Upgrade(object):
         table='config'
         d=r.table(table).get(1).run()     
         log.info('UPGRADING '+table+' TABLE TO VERSION '+str(version))
+        if version == 6:
+            d['engine']['log']['log_level']='WARNING'
+            r.table(table).update(d).run()
+
         if version == 1:
             
             ''' CONVERSION FIELDS PRE CHECKS '''
@@ -86,12 +90,12 @@ class Upgrade(object):
                                     ['grafana'],
                                     [['engine','carbon']]):  
                     ##### CONVERSION FIELDS
-                    cfg['grafana']={'active':d['engine']['carbon']['active'],
+                    d['grafana']={'active':d['engine']['carbon']['active'],
                                     'url':d['engine']['carbon']['server'],
                                     'web_port':80,
                                     'carbon_port':d['engine']['carbon']['port'],
                                     'graphite_port':3000}
-                    r.table(table).update(cfg).run()
+                    r.table(table).update(d).run()
             except Exception as e:
                 log.error('Could not update table '+table+' conversion fields for db version '+version+'!')
                 log.error('Error detail: '+str(e))
@@ -397,7 +401,6 @@ class Upgrade(object):
                 ''' REMOVE FIELDS PRE CHECKS '''
 
 
-        return True
         if version == 2:
             for d in data:
                 id=d['id']

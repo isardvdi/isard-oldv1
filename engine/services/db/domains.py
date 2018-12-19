@@ -11,7 +11,63 @@ from engine.services.db import new_rethink_connection, \
     close_rethink_connection, create_list_buffer_history_domain
 from engine.services.db.db import new_rethink_connection, close_rethink_connection
 from engine.services.db.domains_status import stop_last_domain_status
+from engine.models.state_machine_domain import sm
+from engine.services.log import logs
 
+def update_domain_status(status, id_domain, hyp_id=None, detail='', keep_hyp_id=False, state=False):
+    r_conn = new_rethink_connection()
+    rtable = r.table('domains')
+    #Recogemos el estado de la transición
+    prev_state, event, prev_status = get_domain_state_and_event(id_domain)
+    #verificar que el estado que te ponen es realmente un estado válido
+    if state is False:
+        #ESTA PARTE EN FUTURAS VERSIONES SE HA DE ELIMINAR, PUES YA PONDRÁN EL STATE TODOS LOS MÉTODOS
+        if status in sm.l_states and prev_state != status:
+            state = status
+
+    if state is not False:
+        verification = sm.verify_transition(state_orig=prev_state,
+                                            event=event,
+                                            state_dest=state)
+        if verification is False:
+            # no debería hacer update
+            logs.transitions.warning(f'transition not defined: {prev_state} -> {event} -> {state}')
+        else:
+            logs.transitions.info(f'transition finished {verification}: {prev_state} -> {event} -> {state}')
+
+        # transaction is finished
+        event = False
+    else:
+        #no hay que tocar el state, lo dejamos como está
+        state = prev_state
+
+    # INFO TO DEVELOPER: OJO CON hyp_started a None... peligro si alguien lo chafa, por eso estos if/else
+    if keep_hyp_id == True:
+        hyp_id = rtable.get(id_domain).pluck('hyp_started').run(r_conn)['hyp_started']
+
+    if hyp_id is None:
+        # print('ojojojo')
+        results = rtable.get_all(id_domain, index='id').update({
+            'status': status,
+            'state' : state,
+            'event' : event,
+            'hyp_started': '',
+            'detail': json.dumps(detail)}).run(r_conn)
+    else:
+        results = rtable.get_all(id_domain, index='id').update({'hyp_started': hyp_id,
+                                                                'status': status,
+                                                                'state': state,
+                                                                'event': event,
+                                                                'detail': json.dumps(detail)}).run(r_conn)
+    if status == 'Stopped':
+        stop_last_domain_status(id_domain)
+
+    close_rethink_connection(r_conn)
+    # if results_zero(results):
+    #
+    #     log.debug('id_domain {} in hyperviros {} does not exist in domain table'.format(id_domain,hyp_id))
+
+    return results
 
 def delete_domain(id):
     r_conn = new_rethink_connection()
@@ -29,6 +85,13 @@ def update_domain_progress(id_domain, percent):
     close_rethink_connection(r_conn)
     return results
 
+def update_domain_event(id_domain,event):
+    r_conn = new_rethink_connection()
+    rtable = r.table('domains')
+    results = rtable.get(id_domain).update({'event': event}).run(r_conn)
+    close_rethink_connection(r_conn)
+    return results
+
 def update_domain_force_hyp(id_domain, hyp_id=None):
     r_conn = new_rethink_connection()
     rtable = r.table('domains')
@@ -42,38 +105,7 @@ def update_domain_force_hyp(id_domain, hyp_id=None):
     return results
 
 
-def update_domain_status(status, id_domain, hyp_id=None, detail='', keep_hyp_id=False):
-    r_conn = new_rethink_connection()
-    rtable = r.table('domains')
-    # INFO TO DEVELOPER TODO: verificar que el estado que te ponen es realmente un estado válido
-    # INFO TO DEVELOPER TODO: si es stopped puede interesar forzar resetear hyp_started no??
-    # INFO TO DEVELOPER TODO: MOLARÍA GUARDAR UN HISTÓRICO DE LOS ESTADOS COMO EN HYPERVISORES
 
-    # INFO TO DEVELOPER: OJO CON hyp_started a None... peligro si alguien lo chafa, por eso estos if/else
-
-    if keep_hyp_id == True:
-        hyp_id = rtable.get(id_domain).pluck('hyp_started').run(r_conn)['hyp_started']
-
-
-    if hyp_id is None:
-        # print('ojojojo')
-        results = rtable.get_all(id_domain, index='id').update({
-            'status': status,
-            'hyp_started': '',
-            'detail': json.dumps(detail)}).run(r_conn)
-    else:
-        results = rtable.get_all(id_domain, index='id').update({'hyp_started': hyp_id,
-                                                                'status': status,
-                                                                'detail': json.dumps(detail)}).run(r_conn)
-    if status == 'Stopped':
-        stop_last_domain_status(id_domain)
-
-    close_rethink_connection(r_conn)
-    # if results_zero(results):
-    #
-    #     log.debug('id_domain {} in hyperviros {} does not exist in domain table'.format(id_domain,hyp_id))
-
-    return results
 
 
 def update_domain_hyp_started(domain_id, hyp_id, detail='', status='Started'):
@@ -430,6 +462,18 @@ def get_domain(id):
     close_rethink_connection(r_conn)
     return dict_domain
 
+def get_domain_state_and_event(id):
+    r_conn = new_rethink_connection()
+    rtable = r.table('domains')
+
+    try:
+        domain_status = rtable.get(id).pluck('state','event','status').run(r_conn)
+    except ReqlNonExistenceError:
+        close_rethink_connection(r_conn)
+        return None
+
+    close_rethink_connection(r_conn)
+    return domain_status['state'], domain_status['event'], domain_status['status']
 
 def get_domain_status(id):
     r_conn = new_rethink_connection()

@@ -8,6 +8,7 @@
 # coding=utf-8
 
 from pprint import pprint
+from engine.services.log import logs
 
 
 class DomainStateMachine():
@@ -22,6 +23,9 @@ class DomainStateMachine():
         self.events = self.Events()
         self.states = self.States()
         self.actions = self.Actions()
+        self.d_transitions = {}
+        self.d_transitions_ok = {}
+        self.d_transitions_ko = {}
 
 
     def define_states(self):
@@ -32,7 +36,7 @@ class DomainStateMachine():
 
             'Stopped',
             'Started',
-            'Paused',
+            'Suspended',
 
             'Failed',
             'FailedCreatingDomain',
@@ -129,6 +133,10 @@ class DomainStateMachine():
         l_transition = [state,event,action,next_states_ok, next_states_ko]
         if l_transition[:1] not in [l[:2] for l in self.l_transitions]:
             print(f'--NEW TRANSITION-- \nstate: {state} \nevent: {event} \naction: {action}\n')
+            self.d_transitions[(state,event)] = next_states_ok.union(next_states_ko)
+            self.d_transitions_ok[(state,event)] = next_states_ok
+            self.d_transitions_ko[(state,event)] = next_states_ko
+
             self.l_transitions.append(l_transition)
             self.events.add_event(event,action,state)
             self.states.add_state(state,event,action,next_states_ok, next_states_ko)
@@ -196,8 +204,44 @@ class DomainStateMachine():
                 d['prev_events'].add(event)
                 d['prev_states'].add(state)
 
+    def get_action_transition(self,state_orig,event):
+        try:
+            return self.events.__getattribute__(event)[state_orig]
+        except AttributeError:
+            if event not in self.l_events:
+                logs.changes.info(f'event in transaction not defined: {event}')
+            logs.changes.info(f'transaction not defined for this state and event: {state_orig} ==> {event}')
+            return False
+        except KeyError:
+            if state_orig not in self.l_states:
+                logs.changes.info(f'state origin in transaction not defined: {state_origin}')
+            logs.changes.info(f'transaction not defined for this state and event: {state_orig} ==> {event}')
+            return False
+        except TypeError:
+            return False
 
 
+    def verify_transition(self,state_orig,event,state_dest):
+        tup = (state_orig,event)
+        try:
+            if state_dest in self.d_transitions[tup]:
+                if state_dest in self.d_transitions_ok[tup]:
+                    return 'ok'
+                if state_dest in self.d_transitions_ko[tup]:
+                    return 'ko'
+                else:
+                    #something was wrong
+                    return False
+            else:
+                logs.changes.info(f'state destination not defined: {state_orig} -> {event} -> {state_dest}')
+                return False
+        except KeyError:
+            if state_orig not in self.l_states:
+                logs.changes.info(f'state origin in transaction not defined: {state_orig}')
+            if event not in self.l_events:
+                logs.changes.info(f'event in transaction not defined: {event}')
+            logs.changes.info(f'transaction with state origin and event not defined: {state_orig} -> {event} -> {state_dest}')
+            return False
 
 
 

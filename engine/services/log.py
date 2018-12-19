@@ -10,9 +10,15 @@ import logging as log
 
 from engine.config import CONFIG_DICT
 LOG_DIR = 'logs'
-LOG_LEVEL = CONFIG_DICT["LOG"]["log_level"]
+
 LOG_FILE = CONFIG_DICT["LOG"]["log_file"]
 # LOG FORMATS
+
+#if config_devel have LOG_LEVEL it overrides database config
+try:
+    from engine.config_devel import LOG_LEVEL
+except:
+    LOG_LEVEL = CONFIG_DICT["LOG"]["log_level"]
 
 # log_format='%(levelname)s:%(message)s'
 LOG_FORMAT = '%(asctime)s %(msecs)d - %(levelname)s - %(threadName)s: %(message)s'
@@ -65,7 +71,9 @@ class Logs (object):
                              'eval',
                              'hmlog',
                              'main',
-                             'broom']
+                             'broom',
+                             'transitions',
+                                  ]
         for n in self.names_for_loggers:
             self.create_logger(n)
 

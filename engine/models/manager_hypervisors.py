@@ -26,7 +26,8 @@ from engine.services.db.hypervisors import get_hyps_ready_to_start, get_hypers_d
     get_hyp_hostname_user_port_from_id, update_all_hyps_status, get_hyps_with_status
 from engine.services.db import get_domain_hyp_started, get_if_all_disk_template_created, \
     set_unknown_domains_not_in_hyps, get_domain, remove_domain, update_domain_history_from_id_domain
-from engine.services.db.domains import update_domain_status, update_domain_start_after_created, update_domain_delete_after_stopped
+from engine.services.db.domains import update_domain_status, update_domain_start_after_created, \
+    update_domain_delete_after_stopped, update_domain_event
 from engine.services.lib.functions import get_threads_running, get_tid, engine_restart
 from engine.services.log import logs
 from engine.services.threads.download_thread import launch_thread_download_changes
@@ -34,6 +35,7 @@ from engine.services.threads.threads import launch_try_hyps, set_domains_coheren
     launch_disk_operations_thread, \
     launch_long_operations_thread
 from engine.services.lib.functions import clean_intermediate_status
+from engine.models.state_machine_domain import sm
 
 class ManagerHypervisors(object):
     def __init__(self, launch_threads=True, with_status_threads=True,
@@ -401,7 +403,7 @@ class ManagerHypervisors(object):
 
             self.r_conn = new_rethink_connection()
 
-            cursor = r.table('domains').pluck('id', 'kind', 'status', 'detail').merge({'table': 'domains'}).changes().\
+            cursor = r.table('domains').pluck('id', 'kind', 'status', 'detail','state','event').merge({'table': 'domains'}).changes().\
                 union(r.table('engine').pluck('threads', 'status_all_threads').merge({'table': 'engine'}).changes()).\
                 run(self.r_conn)
 
@@ -432,6 +434,7 @@ class ManagerHypervisors(object):
                 new_domain = False
                 new_status = False
                 old_status = False
+
                 import pprint
                 logs.changes.debug(pprint.pformat(c))
 
@@ -447,7 +450,6 @@ class ManagerHypervisors(object):
                     # if engine is stopped/restarting or not hypervisors online
                     if self.manager.check_actions_domains_enabled() is False:
                         continue
-                    pass
 
                 if c.get('new_val', None) is not None and c.get('old_val', None) is not None:
                     old_status = c['old_val']['status']
@@ -456,7 +458,6 @@ class ManagerHypervisors(object):
                     domain_id = c['new_val']['id']
                     logs.changes.debug('domain_id: {}'.format(domain_id))
                     # if engine is stopped/restarting or not hypervisors online
-
 
                     if old_status != new_status:
 
@@ -468,21 +469,43 @@ class ManagerHypervisors(object):
                     else:
                         # print('&&&&&&&ESTADOS IGUALES OJO &&&&&&&\n&&&&&&&& ID DOMAIN {} - old_status: {} , new_status: {}, detail: {}'.
                         #       format(domain_id,old_status,new_status,new_detail))
-                        pass
+                        continue
+
+                ################## WITH STATE MACHINE #################
+
+                if new_domain is True:
+                    state = 'New'
+                else:
+                    if c['new_val']['state'] is False:
+                        if old_status in sm.l_states:
+                            state = old_status
+                    else:
+                        state = c['new_val']['state']
+
+                if c['new_val']['event'] is False:
+                    if new_status in sm.l_events:
+                        event = new_status
+                        update_domain_event(domain_id,event)
+                else:
+                    event = c['new_val']['event']
+
 
                 ################### CHANGES IN STATUS => ACTION ##################
 
                 if (new_domain is True and new_status == "CreatingDiskFromScratch") or \
                         (old_status == 'FailedCreatingDomain' and new_status == "CreatingDiskFromScratch"):
                     ui.creating_disk_from_scratch(domain_id)
+                    continue
 
                 if (new_domain is True and new_status == "Creating") or \
                         (old_status == 'FailedCreatingDomain' and new_status == "Creating"):
                     ui.creating_disks_from_template(domain_id)
+                    continue
 
                 if (new_domain is True and new_status == "CreatingAndStarting"):
                     update_domain_start_after_created(domain_id)
                     ui.creating_disks_from_template(domain_id)
+                    continue
 
 
                     # INFO TO DEVELOPER
@@ -493,6 +516,7 @@ class ManagerHypervisors(object):
                 if (new_domain is True and new_status == "CreatingFromBuilder") or \
                         (old_status == 'FailedCreatingDomain' and new_status == "CreatingFromBuilder"):
                     ui.creating_disk_from_virtbuilder(domain_id)
+                    continue
 
                 if (old_status in ['CreatingDisk','CreatingDiskFromScratch'] and new_status == "CreatingDomain") or \
                         (old_status == 'RunningVirtBuilder' and new_status == "CreatingDomainFromBuilder"):
@@ -504,16 +528,20 @@ class ManagerHypervisors(object):
                     if new_status == "CreatingDomain":
                         ui.creating_and_test_xml_start(domain_id,
                                                        creating_from_create_dict=True)
+                    continue
 
                 if old_status == 'Stopped' and new_status == "CreatingTemplate":
                     ui.create_template_disks_from_domain(domain_id)
+                    continue
 
                 if old_status == 'Stopped' and new_status == "Deleting":
                     ui.deleting_disks_from_domain(domain_id)
+                    continue
 
-                if (old_status == 'Stopped' and new_status == "Updating") or \
-                        (old_status == 'Downloaded' and new_status == "Updating"):
-                    ui.updating_from_create_dict(domain_id)
+                #if (old_status == 'Stopped' and new_status == "Updating") or \
+                #        (old_status == 'Downloaded' and new_status == "Updating"):
+                #    ui.updating_from_create_dict(domain_id)
+                #    continue
 
                 if old_status == 'DeletingDomainDisk' and new_status == "DiskDeleted":
                     logs.changes.debug('disk deleted, mow remove domain form database')
@@ -523,6 +551,7 @@ class ManagerHypervisors(object):
                     else:
                         update_domain_status('Failed', id_domain,
                                              detail='domain {} can not be deleted from database'.format(domain_id))
+                    continue
 
                 if old_status == 'CreatingTemplateDisk' and new_status == "TemplateDiskCreated":
                     # create_template_from_dict(dict_new_template)
@@ -536,27 +565,39 @@ class ManagerHypervisors(object):
                                              id_domain=domain_id,
                                              hyp_id=False,
                                              detail='Waiting to create more disks for template')
+                    continue
 
-                if (old_status == 'Stopped' and new_status == "Starting") or \
-                        (old_status == 'Failed' and new_status == "Starting"):
-                    ui.start_domain_from_id(id=domain_id, ssl=True)
+#                if (old_status == 'Stopped' and new_status == "Starting") or \
+#                        (old_status == 'Failed' and new_status == "Starting"):
+#                    ui.start_domain_from_id(id=domain_id, ssl=True)
+#                    continue
 
-                if (old_status == 'Started' and new_status == "Stopping" ) or \
-                        (old_status == 'Suspended' and new_status == "Stopping" ):
-                    # INFO TO DEVELOPER Esto es lo que debería ser, pero hay líos con el hyp_started
-                    # ui.stop_domain_from_id(id=domain_id)
-                    hyp_started = get_domain_hyp_started(domain_id)
-                    if hyp_started:
-                        ui.stop_domain(id_domain=domain_id, hyp_id=hyp_started)
-                    else:
-                        logs.main.error('domain without hyp_started can not be stopped: {}. '.format(domain_id))
+                # if (old_status == 'Started' and new_status == "Stopping" ) or \
+                #         (old_status == 'Suspended' and new_status == "Stopping" ):
+                #     # INFO TO DEVELOPER Esto es lo que debería ser, pero hay líos con el hyp_started
+                #     # ui.stop_domain_from_id(id=domain_id)
+                #     hyp_started = get_domain_hyp_started(domain_id)
+                #     if hyp_started:
+                #         ui.stop_domain(id_domain=domain_id, hyp_id=hyp_started)
+                #     else:
+                #         logs.main.error('domain without hyp_started can not be stopped: {}. '.format(domain_id))
+                #     continue
 
                 if (old_status == 'Started' and new_status == "StoppingAndDeleting" ) or \
                         (old_status == 'Suspended' and new_status == "StoppingAndDeleting" ):
                     # INFO TO DEVELOPER Esto es lo que debería ser, pero hay líos con el hyp_started
                     # ui.stop_domain_from_id(id=domain_id)
-                    hyp_started = get_domain_hyp_started(domain_id)
-                    print(hyp_started)
-                    ui.stop_domain(id_domain=domain_id, hyp_id=hyp_started, delete_after_stopped=True)
+                    #hyp_started = get_domain_hyp_started(domain_id)
+                    #print(hyp_started)
+                    #ui.stop_domain(id_domain=domain_id, hyp_id=hyp_started, delete_after_stopped=True)
+                    ui.stop_domain_and_delete(domain_id)
+                    continue
+
+                #if new status in l_states => transition finalished => not action
+                if new_status not in sm.l_states:
+                    action = sm.get_action_transition(state,event)
+                    if action:
+                        ui.__getattribute__(action)(domain_id)
+
 
             logs.main.info('finalished thread domain changes')
