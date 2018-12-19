@@ -17,7 +17,7 @@ from ..lib.load_config import load_config
 ''' 
 Update to new database release version when new code version release
 '''
-release_version = 4
+release_version = 5
 tables=['config','hypervisors','hypervisors_pools','domains','media']
 
 
@@ -78,6 +78,9 @@ class Upgrade(object):
         table='config'
         d=r.table(table).get(1).run()     
         log.info('UPGRADING '+table+' TABLE TO VERSION '+str(version))
+        if version == 5:
+            d['engine']['log']['log_level'] = 'WARNING'
+            r.table(table).update(d).run()
         if version == 1:
             
             ''' CONVERSION FIELDS PRE CHECKS '''
