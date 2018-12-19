@@ -39,7 +39,7 @@ __pycache__/
 /src/install/viewer-certs/host_name
 
 #Conf files
-/isard.conf
+/src/isard.conf
 
 #Csv files
 #csv/
