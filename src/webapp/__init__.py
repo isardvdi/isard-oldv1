@@ -38,7 +38,7 @@ c=Certificates()
 c.update_hyper_pool()
 
 print('Starting isard webapp...')
-if not os.path.exists('./install/.wizard'): exit(1)
+if not os.path.exists('./install/wizard/wizard-disabled'): exit(1)
 
 from webapp.lib.load_config import loadConfig
 cfg=loadConfig(app)

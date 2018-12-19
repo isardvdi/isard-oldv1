@@ -1,4 +1,4 @@
-FROM isard/alpine-pandas:latest
+FROM isard/alpine-pandas:1.0.0
 MAINTAINER isard <info@isard.com>
 
 RUN pip3 uninstall pandas pytz python-dateutil six -y
@@ -24,9 +24,9 @@ echo 'spice_tls_x509_cert_dir = "/etc/pki/libvirt-spice"' >> /etc/libvirt/qemu.c
 RUN mkdir -p /etc/pki/libvirt-spice
 
 # Add default network
-ADD dockers/hypervisor/customlibvirtpost.sh /customlibvirtpost.sh
-RUN chmod a+x /customlibvirtpost.sh
-ADD dockers/hypervisor/network.xml /network.xml
+#ADD dockers/hypervisor/customlibvirtpost.sh /customlibvirtpost.sh
+#RUN chmod a+x /customlibvirtpost.sh
+#ADD dockers/hypervisor/network.xml /network.xml
 
 #RUN mkdir /root/.ssh
 

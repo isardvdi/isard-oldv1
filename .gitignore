@@ -10,8 +10,8 @@ __pycache__/
 *.pyc
 
 # javascript bower
-/src/webapp/bower_components
-/src/webapp/node_modules/
+#/src/webapp/bower_components
+#/src/webapp/node_modules/
 
 # log
 *.log

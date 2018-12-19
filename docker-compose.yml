@@ -1,5 +1,11 @@
 version: '2'
 services:
+    isard-alpine-pandas:
+        image: isard/alpine-pandas:1.0.0
+# Will take long time to build
+#        build:
+#            context: .
+#            dockerfile: dockers/alpine-pandas/Dockerfile
     isard-database:
         restart: always
         image: rethinkdb
@@ -15,7 +21,7 @@ services:
 
     isard-nginx:
         restart: always
-        image: isard/nginx-1.0.0
+        image: isard/nginx:1.0.0
         build:
             context: .
             dockerfile: dockers/nginx/Dockerfile
@@ -34,7 +40,7 @@ services:
                 
     isard-hypervisor:
         restart: always
-        image: isard/hypervisor-1.0.0
+        image: isard/hypervisor:1.0.0
         build:
             context: .
             dockerfile: dockers/hypervisor/Dockerfile
@@ -57,7 +63,7 @@ services:
         
     isard-app:
         restart: always
-        image: isard/app-1.0.0
+        image: isard/app:1.0.0
         build:
             context: .
             dockerfile: dockers/app/Dockerfile
@@ -69,6 +75,7 @@ services:
             - "sshkeys:/root/.ssh"
             - "/opt/isard/certs:/certs"
             - "/opt/isard/logs:/isard/logs"
+            - "/opt/isard/database/wizard:/isard/install/wizard"
         expose:
             - "5000"
         environment:

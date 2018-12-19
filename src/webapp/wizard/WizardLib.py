@@ -57,9 +57,9 @@ class Wizard():
             wlog.warning('Starting initial configuration wizard')
             if not self.valid_js(first=True):
                 try:
-                    from pynpm import YarnPackage
-                    pkg = YarnPackage(os.path.join(os.path.dirname(__file__).rsplit('/',2)[0]+'/install/package.json'))
-                    res = pkg.install()
+                    #from pynpm import YarnPackage
+                    #pkg = YarnPackage(os.path.join(os.path.dirname(__file__).rsplit('/',2)[0]+'/install/package.json'))
+                    #res = pkg.install()
                     res = True
                 except:
                     res=False
@@ -104,11 +104,11 @@ class Wizard():
 
         
     def first_start(self):
-        path='./install/wizard/wizard-show'
+        path='./install/wizard/wizard-disabled'
         return True if not os.path.exists(path) else False
             
     def done_start(self):
-        path='./install/wizard/wizard-wizard-show'
+        path='./install/wizard/wizard-disabled'
         os.mknod(path)
 
 
