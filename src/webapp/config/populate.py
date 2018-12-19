@@ -104,7 +104,7 @@ class Populate(object):
                                                                             },
                                                                     'log':{
                                                                             'log_name':  'isard',
-                                                                            'log_level': 'DEBUG',
+                                                                            'log_level': 'WARNING',
                                                                             'log_file':  'msg.log'
                                                                     },
                                                                     'timeouts':{
