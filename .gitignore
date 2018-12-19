@@ -10,43 +10,39 @@ __pycache__/
 *.pyc
 
 # javascript bower
-webapp/bower_components
-node_modules/
-webapp/node_modules/
-
-#rethink data
-rethinkdb_data/
+/src/webapp/bower_components
+/src/webapp/node_modules/
 
 # log
 *.log
-logs/*
+/src/logs/*
 
 #pycharm
 .idea/
-webapp/.idea/
-engine/.idea/
+/src/webapp/.idea/
+/src/engine/.idea/
 
 #backups
-backups/*
+/src/backups/*
 
 #uploads
-uploads/*
+/src/uploads/*
 
 #docker run scripts
-run_docker_engine.py
-run_docker_webapp.py
+#run_docker_engine.py
+#run_docker_webapp.py
 
 #Generated certs
-install/viewer-certs/*.pem
-install/viewer-certs/*.csr
-test/
-install/viewer-certs/host_name
+/src/install/viewer-certs/*.pem
+/src/install/viewer-certs/*.csr
+/src/test/
+/src/install/viewer-certs/host_name
 
 #Conf files
 /isard.conf
 
 #Csv files
-csv/
+*.csv
 
 #Wizard disable
-install/.wizard
+/src/install/.wizard
