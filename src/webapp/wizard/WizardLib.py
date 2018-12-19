@@ -53,7 +53,7 @@ class Wizard():
         self.url=False
         
         self.doWizard=True if self.first_start() else False
-        if self.doWizard: # WIZARD WAS FORCED BY DELETING install/.wizard file
+        if self.doWizard: # WIZARD WAS FORCED BY DELETING install/x.wizard file
             wlog.warning('Starting initial configuration wizard')
             if not self.valid_js(first=True):
                 try:
@@ -104,11 +104,11 @@ class Wizard():
 
         
     def first_start(self):
-        path='./install/.wizard'
+        path='./install/wizard/wizard-show'
         return True if not os.path.exists(path) else False
             
     def done_start(self):
-        path='./install/.wizard'
+        path='./install/wizard/wizard-wizard-show'
         os.mknod(path)
 
 
