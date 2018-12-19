@@ -46,7 +46,7 @@ install/viewer-certs/host_name
 /isard.conf
 
 #Csv files
-csv/
+#csv/
 
 #Wizard disable
 install/.wizard
