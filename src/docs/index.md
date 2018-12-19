@@ -18,7 +18,7 @@ Use only for testing purposes. Work in progress.
 + Spice, HTML5, VNC and rDesktop viewers available
 + USB devices redirection in spice viewer
 + Kiosk mode. Create disposable desktops
-+ Multiple resource permission levels
++ Multiple resoure permission levels
 + Quotas for desktops, running desktops, templates and iso files
 
 ##### Benefits to administrators
@@ -67,9 +67,6 @@ In 2016 we focused all our efforts on a solid and versatile software that materi
 ### Authors
 + Josep Maria Viñolas Auquer
 + Alberto Larraz Dalmases
-
-### Contributors
-+ Daniel Criado Casas
 
 ### Support/Contact
 Please send us an email to info@isardvdi.com if you have any questions 
