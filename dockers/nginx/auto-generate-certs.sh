@@ -6,7 +6,7 @@ L=Barcelona
 O=localdomain
 CN_CA=$O
 CN_HOST=*.$O
-OU = $O
+OU=$O
 
 echo 'Using the openssl command, create a 2048-bit RSA key:'
 openssl genrsa -out ca-key.pem 2048
