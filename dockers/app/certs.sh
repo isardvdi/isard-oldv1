@@ -5,8 +5,9 @@
 #	echo "$file found, so not generating new ones."
 #else
 #	echo "$file not found, generating new ones"
-cat /dev/zero | ssh-keygen -q -N ""
-mv /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys 
+
+#~ cat /dev/zero | ssh-keygen -q -N ""
+#~ mv /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys 
 
 #fi
 #ssh-keyscan isard-hypervisor > /tmp/known_hosts
@@ -20,7 +21,7 @@ echo "Scanning isard-hypervisor key..."
 ssh-keyscan isard-hypervisor > /root/.ssh/known_hosts
 while [ ! -s /root/.ssh/known_hosts ]
 do
-  sleep 2
+  sleep .5
   echo "Waiting for isard-hypervisor to be online..."
   ssh-keyscan isard-hypervisor > /root/.ssh/known_hosts
 done
@@ -38,5 +39,4 @@ ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N ''
 
 #!/bin/bash
 cd /isard
-git pull
-#python3 run_webapp.py & python3 run_engine.py
+

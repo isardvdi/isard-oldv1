@@ -1,7 +1,7 @@
 FROM marvambass/nginx-ssl-secure
 MAINTAINER isard <info@isard.com>
 
-COPY dockers/nginx/isard.conf /etc/nginx/conf.d/
+COPY dockers/nginx/nginx.conf /etc/nginx/
 RUN mkdir /viewers
 ADD ./src/webapp/static/viewers /viewers
 RUN mkdir /errors

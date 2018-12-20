@@ -1,8 +1,8 @@
 version: '2'
 services:
-    isard-alpine-pandas:
-        image: isard/alpine-pandas:1.0.0
-# Will take long time to build
+# Will take long time to build, better get dockerhub already build
+#    isard-alpine-pandas:
+#        image: isard/alpine-pandas:1.0.0
 #        build:
 #            context: .
 #            dockerfile: dockers/alpine-pandas/Dockerfile
@@ -30,6 +30,7 @@ services:
             - "443:443"
         volumes:
             - "/opt/isard/certs/default:/etc/nginx/external"
+            - "/opt/isard/logs/nginx:/var/log/nginx"
         hostname: isard-nginx
         links:
             - "isard-app"
