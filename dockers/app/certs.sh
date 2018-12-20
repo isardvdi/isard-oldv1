@@ -24,7 +24,7 @@ do
   echo "Waiting for isard-hypervisor to be online..."
   ssh-keyscan isard-hypervisor > /root/.ssh/known_hosts
 done
-echo "isard-hypervisor online, starting engine..."
+echo "isard-hypervisor online..."
 
 #fi
 
@@ -38,4 +38,14 @@ ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N ''
 
 #!/bin/bash
 cd /isard
+
+
+libvirt_sock="/libvirt/libvirt-admin-sock"
+while [ ! -s "$libvirt_sock" ]
+do
+  sleep .5
+  echo "Waiting for isard-hypervisor to be online..."
+done
+echo "isard-hypervisor online, starting engine..."
+python3 run_engine.py
 
