@@ -1065,13 +1065,13 @@ def engine_restart():
     subprocess.call('curl http://localhost:5555/engine_restart &', shell=True)
     return True
 
-def clean_intermediate_status():
-    status_to_delete = ['DownloadAborting']
-    status_to_failed = ['Updating']
+def clean_intermediate_states():
+    states_to_delete = ['DownloadAborting']
+    states_to_failed = ['Updating']
 
     all_domains = get_all_domains_with_id_and_status()
 
-    [delete_domain(d['id']) for d in all_domains if d['status'] in status_to_delete]
+    [delete_domain(d['id']) for d in all_domains if d['status'] in states_to_delete]
     [update_domain_status('Failed', d['id'],
                           detail='change status from {} when isard engine restart'.format(d['status'])) for d in
-     all_domains if d['status'] in status_to_failed]
+     all_domains if d['status'] in states_to_failed]

@@ -5,8 +5,11 @@ import logging
 from flask import Flask
 from logging.handlers import RotatingFileHandler
 
+# wait while database is not connected or table config is not populated
+from engine.config import RETHINK_HOST, RETHINK_PORT, RETHINK_DB
 
 from engine.services.lib.functions import check_tables_populated
+
 check_tables_populated()
 
 from engine.services import db
