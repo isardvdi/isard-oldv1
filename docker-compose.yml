@@ -54,6 +54,7 @@ services:
         privileged: true
         volumes:
             - "sshkeys:/root/.ssh"
+            - "libvirtpid:/run/libvirt"
             - "/opt/isard:/isard"
             - "/opt/isard/certs/default:/etc/pki/libvirt-spice"
         networks:
@@ -74,6 +75,7 @@ services:
         hostname: isard-app
         volumes:
             - "sshkeys:/root/.ssh"
+            - "libvirtpid:/libvirt"
             - "/opt/isard/certs:/certs"
             - "/opt/isard/logs:/isard/logs"
             - "/opt/isard/database/wizard:/isard/install/wizard"
@@ -95,3 +97,4 @@ networks:
     main:
 volumes:
     sshkeys:
+    libvirtpid:
