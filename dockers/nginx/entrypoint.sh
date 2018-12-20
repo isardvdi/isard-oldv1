@@ -23,14 +23,24 @@ DH="/etc/nginx/external/dh.pem"
 
 if [ ! -e "$DH" ]
 then
-  echo ">> seems like the first start of nginx"
-  echo ">> generating $DH with size: $DH_SIZE"
+  echo "#### Generating new dh.pem certificate file."
+  echo "#### This can take a few minutes, please wait..."
   openssl dhparam -out "$DH" $DH_SIZE
 fi
 
 chmod 440 /etc/nginx/external/*
 
-echo ">> exec docker CMD"
-echo "$@"
+cat <<EOF
+###############################################################
+## IsardVDI docker system up.                                ##
+##                                                           ##
+## You can connect through your browser: https://<IP|domain> ##
+##                                                           ##
+## Logs are stored in your host /opt/isard/logs path         ##
+###############################################################
+EOF
+
+#~ echo ">> exec docker CMD"
+#~ echo "$@"
 exec "$@"
 

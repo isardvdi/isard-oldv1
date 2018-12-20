@@ -77,6 +77,8 @@ services:
             - "/opt/isard/certs:/certs"
             - "/opt/isard/logs:/isard/logs"
             - "/opt/isard/database/wizard:/isard/install/wizard"
+            - "/opt/isard/backups:/isard/backups"
+            - "/opt/isard/uploads:/isard/uploads"
         expose:
             - "5000"
         environment:

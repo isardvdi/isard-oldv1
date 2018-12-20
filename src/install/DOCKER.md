@@ -2,6 +2,6 @@
 
 Please clone dockers repo:
 
-git clone https://github.com/isard-vdi/isard-docker
+git clone https://github.com/isard-vdi/isard
 
 And follow documentation
