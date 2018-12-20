@@ -112,11 +112,14 @@ class ManagerHypervisors(object):
 
     def stop_threads(self):
         # events and broom
-        self.t_events.stop = True
-        while True:
-            if self.t_events.is_alive() is False:
-                break
-            sleep(0.1)
+        try:
+            self.t_events.stop = True
+            while True:
+                if self.t_events.is_alive() is False:
+                    break
+                sleep(0.1)
+        except TypeError:
+            pass
         self.t_broom.stop = True
         # operations / status
         for k,v in self.t_long_operations.items():
