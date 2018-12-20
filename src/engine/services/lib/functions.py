@@ -259,10 +259,10 @@ def exec_remote_list_of_cmds_dict(hostname, list_dict_commands, username='root',
         # TODO: make ssh_key login
         pass
     else:
-        try:
-            client.connect(hostname, port=port, username=username)
-        except:
-            return []
+        #try:
+        client.connect(hostname, port=port, username=username)
+        #except:
+        #    return []
 
     returned_array = list_dict_commands.copy()
 
