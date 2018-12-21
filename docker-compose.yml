@@ -22,9 +22,9 @@ services:
     isard-nginx:
         restart: always
         image: isard/nginx:1.0.0
-        build:
-            context: .
-            dockerfile: dockers/nginx/Dockerfile
+#        build:
+#            context: .
+#            dockerfile: dockers/nginx/Dockerfile
         ports:
             - "80:80"
             - "443:443"
@@ -42,9 +42,9 @@ services:
     isard-hypervisor:
         restart: always
         image: isard/hypervisor:1.0.0
-        build:
-            context: .
-            dockerfile: dockers/hypervisor/Dockerfile
+#        build:
+#            context: .
+#            dockerfile: dockers/hypervisor/Dockerfile
         hostname: isard-hypervisor
         ports:
             - "5900-5949:5900-5949"
@@ -65,9 +65,9 @@ services:
     isard-app:
         restart: always
         image: isard/app:1.0.0
-        build:
-            context: .
-            dockerfile: dockers/app/Dockerfile
+#        build:
+#            context: .
+#            dockerfile: dockers/app/Dockerfile
         links:
             - "isard-database"
             - "isard-hypervisor"
